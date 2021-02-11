@@ -2,8 +2,10 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objects as go
+import plotly.express as px
 from dash.dependencies import Input, Output
 import pandas as pd
+import numpy as np
 
 data = pd.read_csv("previsao/dfw.csv")
 forecast = pd.read_csv("previsao/forecast.csv")
@@ -26,7 +28,54 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
 app.title = "Previsão de vendas"
 
+df = pd.DataFrame({
+    "Fruit": ["Apples", "Oranges", "Bananas", "Apples", "Oranges", "Bananas"],
+    "Amount": [4, 1, 2, 2, 4, 5],
+    "City": ["SF", "SF", "SF", "Montreal", "Montreal", "Montreal"]
+})
 
+fig = px.line(range_x=['2015-01-01', '2019-06-09'],
+                range_y=[0, max(data['j2_prime_successor'] * 1.1)],
+                labels={'y': 'Quantidade Vendida', 'x': 'Período'},
+                title='Projeção de vendas')
+
+fig.add_trace(go.Scatter(x=data['2018-01-01':].index, y=data['j2_prime_successor']['2018-01-01':],
+                    mode='markers',
+                    name='Vendas observadas',
+                    showlegend=False,
+                    line={'color': '#045dd1'}))
+   
+fig.add_trace(go.Scatter(x=data[:'2018-01-01'].index, y=data['j2_prime_successor'][:'2018-01-01'],
+                    mode='lines',
+                    name='Vendas observadas',
+                    line={'color': '#045dd1'}))
+                    
+fig.add_trace(go.Scatter(x=forecast['2018-01-01':].index, y=forecast['yhat']['2018-01-01':],
+                    mode='lines',
+                    name='Vendas projetadas',
+                    line={'color': '#d10b04'}))
+
+fig.add_trace(go.Scatter(x=forecast['2018-01-01':].index, y=forecast['yhat_lower']['2018-01-01':],
+                    #mode='none',
+                    name='Limite inferior',
+                    showlegend=False,
+                    line_color='rgba(192, 43, 29, 0.2)'))
+                    
+fig.add_trace(go.Scatter(x=forecast['2018-01-01':].index, y=forecast['yhat_upper']['2018-01-01':],
+                    #mode='none',
+                    fill='tonexty',
+                    fillcolor='rgba(192, 43, 29, 0.2)',
+                    name='Limite superior',
+                    showlegend=False,
+                    line_color='rgba(192, 43, 29, 0.2)'))
+                    
+fig.add_shape(type='line',
+              x0='2018-01-01',
+              y0=0,
+              x1='2018-01-01',
+              y1=999,
+              line={'color': '#c4c7cc'})
+              
 app.layout = html.Div(
     children=[
         html.Div(
@@ -90,32 +139,14 @@ app.layout = html.Div(
             ],
             className="wrapper",
         ),
-#        html.Div(
-#            children=dcc.Graph(
-#                id="forecast-chart",
-#                config={"displayModeBar": False},
-#                figure={
-#                    "data": [
-#                        {
-#                            "x": data.index,
-#                            "y": [forecast['yhat'], data['j2_prime_successor']],
-#                            "type": "lines",
-#                        },
-#                    ],
-#                    "layout": {
-#                        "title": {
-#                            "text": "Previsão de Vendas (J2 Prime)",
-#                            "x": 0.05,
-#                            "xanchor": "left",
-#                        },
-#                        "xaxis": {"fixedrange": True},
-#                        "yaxis": {"fixedrange": True},
-#                        "colorway": ["#d10b04", "#045dd1"],
-#                    },
-#                },
-#            ),
-#            className="wrapper",
-#        ),
+        html.Div(
+            children=dcc.Graph(
+                id="forecast-chart",
+                config={"displayModeBar": False},
+                figure=fig
+            ),
+            className="wrapper",
+        ),
     ]
 )
 
