@@ -28,12 +28,6 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
 app.title = "Previsão de vendas"
 
-df = pd.DataFrame({
-    "Fruit": ["Apples", "Oranges", "Bananas", "Apples", "Oranges", "Bananas"],
-    "Amount": [4, 1, 2, 2, 4, 5],
-    "City": ["SF", "SF", "SF", "Montreal", "Montreal", "Montreal"]
-})
-
 fig = px.line(range_x=['2015-01-01', '2019-06-09'],
                 range_y=[0, max(data['j2_prime_successor'] * 1.1)],
                 labels={'y': 'Quantidade Vendida', 'x': 'Período'},
@@ -132,7 +126,18 @@ app.layout = html.Div(
             children=[
                 html.Div(
                     children=dcc.Graph(
-                        id="sales-chart", config={"displayModeBar": False},
+                        id="sales-chart-cumsum", config={"displayModeBar": False},
+                    ),
+                    className="card",
+                ),
+            ],
+            className="wrapper",
+        ),
+        html.Div(
+            children=[
+                html.Div(
+                    children=dcc.Graph(
+                        id="sales-chart-period", config={"displayModeBar": False},
                     ),
                     className="card",
                 ),
@@ -152,7 +157,7 @@ app.layout = html.Div(
 
 @app.callback(
 # Lembrete: Se tiver mais de uma chamada de Output(...) colocar em uma lista as multiplas chamadas
-    Output("sales-chart", "figure"),
+    [Output("sales-chart-cumsum", "figure"), Output("sales-chart-period", "figure")],
     [
         Input("product-filter", "value"),
         Input("date-range", "start_date"),
@@ -166,7 +171,29 @@ def update_charts(product, start_date, end_date):
         & (data.index <= end_date)
     )
     filtered_data = data.loc[mask, :]
-    sales_chart_figure = {
+    
+    sales_cumsum_chart_figure = {
+        "data": [
+            {
+                "x": filtered_data.index,
+                "y": filtered_data[product].cumsum(),
+                "type": "lines",
+                "hovertemplate": "%{y:.2f}<extra></extra>",
+            },
+        ],
+        "layout": {
+            "title": {
+                "text": "Quantidade vendida (acumulado)",
+                "x": 0.05,
+                "xanchor": "left",
+            },
+            "xaxis": {"fixedrange": True},
+            "yaxis": {"tickprefix": "", "fixedrange": True},
+            "colorway": ["#045dd1"],
+        },
+    }
+
+    sales_period_chart_figure = {
         "data": [
             {
                 "x": filtered_data.index,
@@ -177,7 +204,7 @@ def update_charts(product, start_date, end_date):
         ],
         "layout": {
             "title": {
-                "text": "Quantidade vendida",
+                "text": "Quantidade vendida (semanal)",
                 "x": 0.05,
                 "xanchor": "left",
             },
@@ -186,8 +213,8 @@ def update_charts(product, start_date, end_date):
             "colorway": ["#045dd1"],
         },
     }
-
-    return sales_chart_figure
+    
+    return sales_cumsum_chart_figure, sales_period_chart_figure
 
     
 if __name__ == "__main__":
