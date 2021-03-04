@@ -215,6 +215,7 @@ app.layout = html.Div(
             ],
             className="menu",
         ),
+
         html.Div(
             children=[
                 html.Div(
@@ -223,11 +224,6 @@ app.layout = html.Div(
                     ),
                     className="card",
                 ),
-            ],
-            className="wrapper",
-        ),
-        html.Div(
-            children=[
                 html.Div(
                     children=dcc.Graph(
                         id="sales-chart-period", config={"displayModeBar": False},
@@ -237,12 +233,15 @@ app.layout = html.Div(
             ],
             className="wrapper",
         ),
+
+     
+
         html.Div(
             children=dcc.Graph(
                 id="forecast-chart",
                 config={"displayModeBar": False},
             ),
-            className="wrapper",
+            className="wrapperSecond",
         ),
     ]
 )
