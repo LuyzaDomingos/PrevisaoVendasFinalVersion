@@ -96,6 +96,7 @@ external_stylesheets = [
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
 app.title = "Previsão de vendas"
+heroku = True
 
 def getForecastFigure(filtered_data, product, split_date):
     size_train = len(data[:split_date])
@@ -114,7 +115,8 @@ def getForecastFigure(filtered_data, product, split_date):
         future = prophet.make_future_dataframe(periods=size_test, freq='W-THU')
         forecast = prophet.predict(future)
         forecast.index = pd.to_datetime(forecast['ds'])
-        forecast.to_csv("previsao/forecasts/" + product.replace(" ", "_").replace("/", "_") + ".csv")
+        if heroku is False:
+            forecast.to_csv("previsao/forecasts/" + product.replace(" ", "_").replace("/", "_") + ".csv")
         
     fig = px.line(range_x=['2015-01-01', '2019-06-09'],
                     range_y=[0, max(filtered_data[product] * 1.1)],
