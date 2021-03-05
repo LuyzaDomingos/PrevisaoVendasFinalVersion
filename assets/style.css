@@ -38,6 +38,7 @@ body {
     padding-right: 10px;
     padding-left: 10px;
     margin-top: 32px;
+
 }
 
 .wrapperSecond{
@@ -54,9 +55,10 @@ body {
     box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.18);
 
 }
+
 .menu {
     height: 112px;
-    width: 912px;
+    width: 1320px;
     display: flex;
     justify-content: space-evenly;
     padding-top: 24px;

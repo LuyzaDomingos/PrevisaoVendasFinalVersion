@@ -197,6 +197,26 @@ app.layout = html.Div(
                         ),
                     ]
                 ),
+                # html.Div(
+                #     children=[
+                #         html.Div(
+                #             children=[
+                #                 html.Div(children="Tipo de Intervalo",className="menu-title"),
+                #                 dcc.Dropdown(
+                #                     id="type-filter",
+                #                     options=[
+                #                         {'label':'Semanal', 'value':'S'},
+                #                         {'label':'Mensal','value':'M'}
+
+                #                     ],
+                #                     value=['S','M'],
+                #                     className="dropdown",
+                #                 ),
+                #             ]
+                #         )
+                #     ]
+                # ),
+
                 html.Div(
                     children=[
                         html.Div(
@@ -224,6 +244,11 @@ app.layout = html.Div(
                     ),
                     className="card",
                 ),
+            ],
+            className="wrapper",
+        ),
+        html.Div(
+            children=[
                 html.Div(
                     children=dcc.Graph(
                         id="sales-chart-period", config={"displayModeBar": False},
@@ -233,9 +258,7 @@ app.layout = html.Div(
             ],
             className="wrapper",
         ),
-
      
-
         html.Div(
             children=dcc.Graph(
                 id="forecast-chart",
@@ -253,8 +276,11 @@ app.layout = html.Div(
         Input("product-filter", "value"),
         Input("date-range", "start_date"),
         Input("date-range", "end_date"),
+        #Input("type-filter","value"),
     ],
 )
+
+
 
 def update_charts(product, start_date, end_date):
     mask = (
