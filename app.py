@@ -95,7 +95,7 @@ external_stylesheets = [
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
-app.title = "Previsão de vendas"
+app.title = "Previsão de vendas TESTE"
 
 def getForecastFigure(filtered_data, product, split_date):
     # Criação do dataframe para o Prophet
