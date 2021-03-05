@@ -95,21 +95,27 @@ external_stylesheets = [
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
-app.title = "Previsão de vendas TESTE"
+app.title = "Previsão de vendas"
 
 def getForecastFigure(filtered_data, product, split_date):
-    # Criação do dataframe para o Prophet
-    prophet_df = pd.DataFrame({'ds': filtered_data.index, 'y':filtered_data[product].values})
     size_train = len(data[:split_date])
     size_test = len(data[split_date:])
-    
-    prophet = Prophet(daily_seasonality=False, holidays=holidays)
-    prophet.fit(prophet_df[:size_train])
+    # Uma espécie de cache para não repetir o modelo toda vez que selecionar um produto
+    try:
+        forecast = pd.read_csv("previsao/forecasts/" + product.replace(" ", "_").replace("/", "_") + ".csv")
+        forecast.index = pd.to_datetime(forecast['ds'])
+    except:
+        # Criação do dataframe para o Prophet
+        prophet_df = pd.DataFrame({'ds': filtered_data.index, 'y':filtered_data[product].values})
+        
+        prophet = Prophet(daily_seasonality=False, holidays=holidays)
+        prophet.fit(prophet_df[:size_train])
 
-    future = prophet.make_future_dataframe(periods=size_test, freq='W-THU')
-    forecast = prophet.predict(future)
-    forecast.index = pd.to_datetime(forecast['ds'])
-
+        future = prophet.make_future_dataframe(periods=size_test, freq='W-THU')
+        forecast = prophet.predict(future)
+        forecast.index = pd.to_datetime(forecast['ds'])
+        forecast.to_csv("previsao/forecasts/" + product.replace(" ", "_").replace("/", "_") + ".csv")
+        
     fig = px.line(range_x=['2015-01-01', '2019-06-09'],
                     range_y=[0, max(filtered_data[product] * 1.1)],
                     labels={'y': 'Quantidade Vendida', 'x': 'Período'},
