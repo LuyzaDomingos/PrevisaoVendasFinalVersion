@@ -180,9 +180,7 @@ app.layout = html.Div(
                     children="Previsão de vendas", className="header-title"
                 ),
                 html.P(
-                    children="Visualização da série temporal de Smartphones"
-                    " da família Samsung Galaxy J vendidos"
-                    " entre 2015 e 2019",
+                    children="Visualização e previsão de séries temporais referentes à vendas de produtos" ,
                     className="header-description",
                 ),
             ],
