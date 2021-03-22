@@ -1,4 +1,5 @@
 import dash
+import dash_auth
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objects as go
@@ -8,19 +9,20 @@ import pandas as pd
 import numpy as np
 from fbprophet import Prophet
 # Leitura de dados, por padrão em previsao/32.csv
-data = pd.read_csv("previsao/32.csv", index_col=0)
+data = pd.read_csv("previsao/geral.csv", index_col=0)
 data.fillna(value=0, inplace=True)
 data.index = pd.to_datetime(data.index)
-data = data.resample('W-THU').sum()
+data = data[:'2021-03-12']
+#data = data.resample('W-THU').sum()
 # Criação das novas séries temporais
-data['j2_core'] = data['SMARTPHONE SAMSUNG GAL J2 CORE 16GB PRATA'] + data['SMARTPHONE SAMSUNG GAL J2 CORE 16GB PRETO']
-data['j4_core'] = data['SMARTPHONE SAMSUNG GAL J4 CORE 16GB COBRE'] + data['SMARTPHONE SAMSUNG GAL J4 CORE 16GB PRETO']
-data['j1_120'] = data['SMARTPHONE SAMSUNG GAL J1 J120 4G DB  DOURADO'] + data['SMARTPHONE SAMSUNG GAL J1 J120 4G DB  PRETO']
-data['j6_32'] = data['SMARTPHONE SAMSUNG GAL J6 32GB PRATA'] + data['SMARTPHONE SAMSUNG GAL J6 32GB PRETO']
-data['j1_100m'] = data['SMARTPHONE SAMSUNG GAL J1 J100M TIM BRANCO'] + data['SMARTPHONE SAMSUNG GAL J1 J100M TIM PRETO']
-data['j2_prime'] = data['SMARTPHONE SAMSUNG GAL J2 PRIME 16GB TV DB PT'] + data['SMARTPHONE SAMSUNG GAL J2 PRIME 16GB TV DB RS'] + data['SMARTPHONE SAMSUNG GAL J2 PRIME 16GB TV DB DR']
-data['j2_pro'] = data['SMARTPHONE SAMSUNG GAL J2 PRO J250M DB DR'] + data['SMARTPHONE SAMSUNG GAL J2 PRO J250M DB RS']
-data['j2_prime_successor'] = data['j2_prime'] + data['SMARTPHONE SAMSUNG GAL J7 J700 DB BRANCO'] + data['SMARTPHONE SAMSUNG GAL J7 J700 DB DOURADO'] + data['SMARTPHONE SAMSUNG GAL J5 J500 DB BRANCO'] + data['SMARTPHONE SAMSUNG GAL J5 J500 DB DOURADO']
+#data['j2_core'] = data['SMARTPHONE SAMSUNG GAL J2 CORE 16GB PRATA'] + data['SMARTPHONE SAMSUNG GAL J2 CORE 16GB PRETO']
+#data['j4_core'] = data['SMARTPHONE SAMSUNG GAL J4 CORE 16GB COBRE'] + data['SMARTPHONE SAMSUNG GAL J4 CORE 16GB PRETO']
+#data['j1_120'] = data['SMARTPHONE SAMSUNG GAL J1 J120 4G DB  DOURADO'] + data['SMARTPHONE SAMSUNG GAL J1 J120 4G DB  PRETO']
+#data['j6_32'] = data['SMARTPHONE SAMSUNG GAL J6 32GB PRATA'] + data['SMARTPHONE SAMSUNG GAL J6 32GB PRETO']
+#data['j1_100m'] = data['SMARTPHONE SAMSUNG GAL J1 J100M TIM BRANCO'] + data['SMARTPHONE SAMSUNG GAL J1 J100M TIM PRETO']
+#data['j2_prime'] = data['SMARTPHONE SAMSUNG GAL J2 PRIME 16GB TV DB PT'] + data['SMARTPHONE SAMSUNG GAL J2 PRIME 16GB TV DB RS'] + data['SMARTPHONE SAMSUNG GAL J2 PRIME 16GB TV DB DR']
+#data['j2_pro'] = data['SMARTPHONE SAMSUNG GAL J2 PRO J250M DB DR'] + data['SMARTPHONE SAMSUNG GAL J2 PRO J250M DB RS']
+#data['j2_prime_successor'] = data['j2_prime'] + data['SMARTPHONE SAMSUNG GAL J7 J700 DB BRANCO'] + data['SMARTPHONE SAMSUNG GAL J7 J700 DB DOURADO'] + data['SMARTPHONE SAMSUNG GAL J5 J500 DB BRANCO'] + data['SMARTPHONE SAMSUNG GAL J5 J500 DB DOURADO']
 # Criação do dataframe de feriados
 mothers = pd.DataFrame({
     'holiday': 'Dia das mães',
@@ -79,6 +81,14 @@ carnival = pd.DataFrame({
 
 holidays = pd.concat((mothers, fathers, valentines, christmas, bf, childrens, easter, new_year))
 
+password_dict = {'armazem': 'pb'}
+
+freq_dict = {
+    'Diário': 'D',
+    'Semanal': 'W-MON',
+    'Mensal': 'M'
+}
+
 #data = pd.read_csv("previsao/dfw.csv")
 forecast = pd.read_csv("previsao/forecast.csv")
 
@@ -94,13 +104,14 @@ external_stylesheets = [
 ]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+auth = dash_auth.BasicAuth(app, password_dict)
 server = app.server
 app.title = "Previsão de vendas"
 heroku = True
 
-def getForecastFigure(filtered_data, product, split_date):
-    size_train = len(data[:split_date])
-    size_test = len(data[split_date:])
+def getForecastFigure(filtered_data, product, split_date, freq='D'):
+    size_train = len(filtered_data[:split_date])
+    size_test = len(filtered_data[split_date:])
     # Uma espécie de cache para não repetir o modelo toda vez que selecionar um produto
     try:
         forecast = pd.read_csv("previsao/forecasts/" + product.replace(" ", "_").replace("/", "_") + ".csv")
@@ -112,18 +123,18 @@ def getForecastFigure(filtered_data, product, split_date):
         prophet = Prophet(daily_seasonality=False, holidays=holidays)
         prophet.fit(prophet_df[:size_train])
 
-        future = prophet.make_future_dataframe(periods=size_test, freq='W-THU')
+        future = prophet.make_future_dataframe(periods=size_test, freq=freq)
         forecast = prophet.predict(future)
         forecast.index = pd.to_datetime(forecast['ds'])
         if heroku is False:
             forecast.to_csv("previsao/forecasts/" + product.replace(" ", "_").replace("/", "_") + ".csv")
         
-    fig = px.line(range_x=['2015-01-01', '2019-06-09'],
+    fig = px.line(range_x=['2018-01-01', '2021-03-12'],
                     range_y=[0, max(filtered_data[product] * 1.1)],
                     labels={'y': 'Quantidade Vendida', 'x': 'Período'},
                     title='Projeção de vendas')
 
-    fig.add_trace(go.Scatter(x=data[size_train:].index, y=filtered_data[product][size_train:],
+    fig.add_trace(go.Scatter(x=filtered_data[size_train:].index, y=filtered_data[product][size_train:],
                         mode='markers',
                         name='Vendas observadas',
                         showlegend=False,
@@ -170,7 +181,7 @@ def getForecastFigure(filtered_data, product, split_date):
     fig.layout.plot_bgcolor='rgba(255, 255, 255, 1)'
 
     return fig
-
+    
 app.layout = html.Div(
     children=[
         html.Div(
@@ -197,7 +208,19 @@ app.layout = html.Div(
                                 {"label": product, "value": product}
                                 for product in data.columns
                             ],
-                            value="j2_prime_successor",
+                            value="REFRIGERADOR ROC 31 BR",
+                            clearable=False,
+                            className="dropdown",
+                        ),
+                    ]
+                ),
+                html.Div(
+                    children=[
+                        html.Div(children="Frequência", className="menu-title"),
+                        dcc.Dropdown(
+                            id="frequency-selector",
+                            options=[{"label": key, "value": value} for key, value in freq_dict.items()],
+                            value="D",
                             clearable=False,
                             className="dropdown",
                         ),
@@ -280,6 +303,7 @@ app.layout = html.Div(
     [Output("sales-chart-cumsum", "figure"), Output("sales-chart-period", "figure"), Output("forecast-chart", "figure")],
     [
         Input("product-filter", "value"),
+        Input("frequency-selector", "value"),
         Input("date-range", "start_date"),
         Input("date-range", "end_date"),
         #Input("type-filter","value"),
@@ -288,12 +312,13 @@ app.layout = html.Div(
 
 
 
-def update_charts(product, start_date, end_date):
+def update_charts(product, frequency, start_date, end_date):
     mask = (
         (data.index >= start_date)
         & (data.index <= end_date)
     )
     filtered_data = data.loc[mask, :]
+    filtered_data = filtered_data.resample(frequency).sum()
     
     sales_cumsum_chart_figure = {
         "data": [
@@ -327,7 +352,7 @@ def update_charts(product, start_date, end_date):
         ],
         "layout": {
             "title": {
-                "text": "Quantidade vendida (semanal)",
+                "text": "Quantidade vendida (variação)",
                 "x": 0.05,
                 "xanchor": "left",
             },
@@ -337,7 +362,7 @@ def update_charts(product, start_date, end_date):
         },
     }
     
-    forecast_chart_figure = getForecastFigure(filtered_data, product, '2018-01-01')
+    forecast_chart_figure = getForecastFigure(filtered_data, product, '2021-01-01', frequency)
     
     return sales_cumsum_chart_figure, sales_period_chart_figure, forecast_chart_figure
 
