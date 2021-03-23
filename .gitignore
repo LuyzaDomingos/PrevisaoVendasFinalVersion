@@ -1,5 +1,11 @@
 previsao/dfw.csv
 previsao/forecast.csv
 previsao/smartphones.json
+previsao/.ipynb_checkpoints/
+previsao/2018.txt
+previsao/2019.txt
+previsao/2020.txt
+previsao/2021.txt
+previsao/df2.csv
 venv
 .DS_Store

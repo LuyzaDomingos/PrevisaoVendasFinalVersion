@@ -112,9 +112,10 @@ heroku = True
 def getForecastFigure(filtered_data, product, split_date, freq='D'):
     size_train = len(filtered_data[:split_date])
     size_test = len(filtered_data[split_date:])
+    path = "previsao/forecasts/" + freq + "/" + product.replace(" ", "_").replace("/", "_") + ".csv"
     # Uma espécie de cache para não repetir o modelo toda vez que selecionar um produto
     try:
-        forecast = pd.read_csv("previsao/forecasts/" + product.replace(" ", "_").replace("/", "_") + ".csv")
+        forecast = pd.read_csv(path)
         forecast.index = pd.to_datetime(forecast['ds'])
     except:
         # Criação do dataframe para o Prophet
@@ -127,7 +128,7 @@ def getForecastFigure(filtered_data, product, split_date, freq='D'):
         forecast = prophet.predict(future)
         forecast.index = pd.to_datetime(forecast['ds'])
         if heroku is False:
-            forecast.to_csv("previsao/forecasts/" + product.replace(" ", "_").replace("/", "_") + ".csv")
+            forecast.to_csv(path)
         
     fig = px.line(range_x=['2018-01-01', '2021-03-12'],
                     range_y=[0, max(filtered_data[product] * 1.1)],
