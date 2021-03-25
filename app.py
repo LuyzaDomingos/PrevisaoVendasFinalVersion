@@ -9,10 +9,21 @@ import pandas as pd
 import numpy as np
 from fbprophet import Prophet
 # Leitura de dados, por padrão em previsao/32.csv
-data = pd.read_csv("previsao/geral.csv", index_col=0)
-data.fillna(value=0, inplace=True)
-data.index = pd.to_datetime(data.index)
-data = data[:'2021-03-12']
+data_d = pd.read_csv("previsao/geral.csv", index_col=0)
+data_d.fillna(value=0, inplace=True)
+data_d.index = pd.to_datetime(data_d.index)
+data_d = data_d[:'2021-03-12']
+
+data_w = pd.read_csv("previsao/WGeral.csv", index_col=0)
+data_w.fillna(value=0, inplace=True)
+data_w.index = pd.to_datetime(data_w.index)
+data_w = data_w[:'2021-03-12']
+
+data_m = pd.read_csv("previsao/MonGeral.csv", index_col=0)
+data_m.fillna(value=0, inplace=True)
+data_m.index = pd.to_datetime(data_m.index)
+data_m = data_m[:'2021-03-12']
+
 #data = data.resample('W-THU').sum()
 # Criação das novas séries temporais
 #data['j2_core'] = data['SMARTPHONE SAMSUNG GAL J2 CORE 16GB PRATA'] + data['SMARTPHONE SAMSUNG GAL J2 CORE 16GB PRETO']
@@ -207,7 +218,7 @@ app.layout = html.Div(
                             id="product-filter",
                             options=[
                                 {"label": product, "value": product}
-                                for product in data.columns
+                                for product in ['CONDICIONADOR DE AR TIPO SPLIT FIT CCSF9-R4', 'REFRIGERADOR ROC 31 BR']
                             ],
                             value="REFRIGERADOR ROC 31 BR",
                             clearable=False,
@@ -255,10 +266,10 @@ app.layout = html.Div(
                             ),
                         dcc.DatePickerRange(
                             id="date-range",
-                            min_date_allowed=data.index.min().date(),
-                            max_date_allowed=data.index.max().date(),
-                            start_date=data.index.min().date(),
-                            end_date=data.index.max().date(),
+                            min_date_allowed=data_d.index.min().date(),
+                            max_date_allowed=data_d.index.max().date(),
+                            start_date=data_d.index.min().date(),
+                            end_date=data_d.index.max().date(),
                         ),
                     ]
                 ),
@@ -314,11 +325,24 @@ app.layout = html.Div(
 
 
 def update_charts(product, frequency, start_date, end_date):
-    mask = (
-        (data.index >= start_date)
-        & (data.index <= end_date)
-    )
-    filtered_data = data.loc[mask, :]
+    if frequency == 'D':
+        mask = (
+        (data_d.index >= start_date)
+        & (data_d.index <= end_date)
+        )
+        filtered_data = data_d.loc[mask, :]
+    elif frequency == 'W-MON':
+        mask = (
+        (data_w.index >= start_date)
+        & (data_w.index <= end_date)
+        )
+        filtered_data = data_w.loc[mask, :]
+    else: # frequency == 'M'
+        mask = (
+        (data_m.index >= start_date)
+        & (data_m.index <= end_date)
+        )
+        filtered_data = data_m.loc[mask, :]
     filtered_data = filtered_data.resample(frequency).sum()
     
     sales_cumsum_chart_figure = {
