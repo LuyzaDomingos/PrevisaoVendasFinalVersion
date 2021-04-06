@@ -17,7 +17,7 @@ index_page = html.Div(children=[html.Div(children=[
 ], className='landing')])
 
 @app.callback(Output('page-content', 'children'),
-              Input('url', 'pathname'))
+              [Input('url', 'pathname')])
 def display_page(pathname):
     if pathname == '/apps/app1':
         return app1.layout
