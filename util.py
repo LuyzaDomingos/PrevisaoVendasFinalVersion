@@ -3,6 +3,68 @@ import plotly.graph_objects as go
 import pandas as pd
 from plotly.subplots import make_subplots
 from fbprophet import Prophet
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+
+# Criação do dataframe de feriados
+mothers = pd.DataFrame({
+    'holiday': 'Dia das mães',
+    'ds': ['2015-05-10', '2016-05-08', '2017-05-14', '2018-05-13', '2019-05-12', '2020-05-10', '2021-05-09'],
+    'lower_window': 0,
+    'upper_window': 0
+})
+fathers = pd.DataFrame({
+    'holiday': 'Dia dos pais',
+    'ds': ['2015-08-09', '2016-08-14', '2017-08-13', '2018-08-12', '2019-08-11', '2020-08-09', '2021-06-20'],
+    'lower_window': 0,
+    'upper_window': 0
+})
+valentines = pd.DataFrame({
+    'holiday': 'Dia dos namorados',
+    'ds': ['2015-06-12', '2016-06-12', '2017-06-12', '2018-06-12', '2019-06-12', '2020-06-12', '2021-06-12'],
+    'lower_window': 0,
+    'upper_window': 0
+})
+christmas = pd.DataFrame({
+    'holiday': 'Natal',
+    'ds': ['2015-12-25', '2016-12-25', '2017-12-25', '2018-12-25', '2019-12-25', '2020-12-25', '2020-12-25'],
+    'lower_window': -1, # Incluindo a véspera
+    'upper_window': 0
+})
+bf = pd.DataFrame({
+    'holiday': 'Black friday',
+    'ds': ['2015-11-27', '2016-11-25', '2017-11-24', '2018-11-25', '2019-11-24', '2020-11-27', '2021-11-25'],
+    'lower_window': 0,
+    'upper_window': 0
+})
+childrens = pd.DataFrame({
+    'holiday': 'Dia das crianças',
+    'ds': ['2015-10-12', '2016-10-12', '2017-10-12', '2018-10-12', '2019-10-12', '2020-10-12', '2021-10-12'],
+    'lower_window': 0,
+    'upper_window': 0
+})
+easter = pd.DataFrame({
+    'holiday': 'Páscoa',
+    'ds': ['2015-04-05', '2016-03-27', '2017-04-16', '2018-04-01', '2019-04-21', '2020-04-12', '2021-04-04'], # Domingo de páscoa
+    'lower_window': -2, # Incluindo o fim de semana
+    'upper_window': 0
+})
+new_year = pd.DataFrame({
+    'holiday': 'Ano Novo',
+    'ds': ['2015-01-01', '2016-01-01', '2017-01-01', '2018-01-01', '2019-01-01', '2020-01-01', '2021-01-01'],
+    'lower_window': -1, # Adicionar a véspera
+    'upper_window': 0
+})
+carnival = pd.DataFrame({
+    'holiday': 'Carnaval',
+    'ds': ['2015-02-18', '2016-02-10', '2017-03-01', '2018-02-14', '2019-03-06', '2020-02-26', '2021-02-17'], # Quarta feira de cinzas
+    'lower_window': -4, # Incluindo sábado, domingo, segunda e terça
+    'upper_window': 0
+})
+
+holidays = pd.concat((mothers, fathers, valentines, christmas, bf, childrens, easter, new_year))
+
+def heroku():
+    return True
 
 def get_forecast_figure(filtered_data, product, split_date, freq='D'):
     size_train = len(filtered_data[:split_date])
@@ -22,9 +84,13 @@ def get_forecast_figure(filtered_data, product, split_date, freq='D'):
         future = prophet.make_future_dataframe(periods=size_test, freq=freq)
         forecast = prophet.predict(future)
         forecast.index = pd.to_datetime(forecast['ds'])
-        if heroku is False:
+        if heroku() is False:
             forecast.to_csv(path)
-        
+
+    forecast['yhat'] = forecast['yhat'].apply(lambda x : 0 if x < 0 else round(x))
+    forecast['yhat_lower'] = forecast['yhat_lower'].apply(lambda x : 0 if x < 0 else round(x))
+    forecast['yhat_upper'] = forecast['yhat_upper'].apply(lambda x : 0 if x < 0 else round(x))
+
     fig = px.line(range_x=['2018-01-01', '2021-03-12'],
                     range_y=[0, max(filtered_data[product] * 1.1)],
                     labels={'y': 'Quantidade Vendida', 'x': 'Período'},
@@ -35,11 +101,7 @@ def get_forecast_figure(filtered_data, product, split_date, freq='D'):
                         name='Vendas observadas',
                         showlegend=False,
                         line={'color': '#045dd1'}))
-       
-    #fig.add_trace(go.Bar(x=data[split_date:].index, y=data[product][split_date:],
-    #                    name='Vendas observadas',
-    #                    showlegend=False))
-                        
+
     fig.add_trace(go.Scatter(x=filtered_data[:size_train].index, y=filtered_data[product][:size_train],
                         mode='lines',
                         name='Vendas observadas',
@@ -76,7 +138,7 @@ def get_forecast_figure(filtered_data, product, split_date, freq='D'):
     fig.layout.yaxis.gridcolor='rgba(189, 189, 189, 0.5)'
     fig.layout.plot_bgcolor='rgba(255, 255, 255, 1)'
 
-    return fig
+    return fig, forecast
     
 def get_sales_figure(filtered_data, product):
     # Criar uma figura com eixos secundários
@@ -85,11 +147,11 @@ def get_sales_figure(filtered_data, product):
     
     # Adicionar as linhas
     fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product].cumsum(), name="Vendas acumuladas", line={'color': '#045dd1'}), secondary_y=False)
-    fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product], name="Novas vendas", line={'color': 'rgba(101, 156, 0, 0.8)'}), secondary_y=True)
+    fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product], name="Vendas no período", line={'color': 'rgba(101, 156, 0, 0.8)'}), secondary_y=True)
 
     # Nome dos eixos
     fig.update_yaxes(title_text="Vendas acumuladas", secondary_y=False)
-    fig.update_yaxes(title_text="Novas Vendas", secondary_y=True)
+    fig.update_yaxes(title_text="Vendas no período", secondary_y=True)
 
     # Linha y = 0
     fig.add_shape(type='line', x0='2018-01-01', y0=0, x1='2021-03-12', y1=0, line={'color': 'rgba(0, 0, 0, 1)'})
@@ -98,4 +160,39 @@ def get_sales_figure(filtered_data, product):
     fig.layout.yaxis.gridcolor='rgba(189, 189, 189, 0.5)'
     fig.layout.plot_bgcolor='rgba(255, 255, 255, 1)'
     
+    return fig
+
+def get_indicators_figure(filtered_data, forecast, product, split_date):
+    size_train = len(filtered_data[:split_date])
+    size_test = len(filtered_data[split_date:])
+
+    mse = mean_squared_error(filtered_data[product][size_train:], forecast['yhat'][size_train:len(filtered_data)])
+    mad = mean_absolute_error(filtered_data[product][size_train:], forecast['yhat'][size_train:len(filtered_data)])
+
+    fig = go.Figure()
+    fig.update_layout(height=230)
+
+    fig.add_trace(go.Indicator(
+        mode = "number",
+        value = mse,
+        title = {"text": "Erro médio quadrático"},
+        #delta = {'reference': 400, 'relative': True},
+        domain = {'row': 0, 'column': 0}))
+
+    fig.add_trace(go.Indicator(
+        mode = "number",
+        value = mad,
+        #title = {"text": "Erro médio absoluto<br><span style='font-size:0.8em;color:gray'>Subtitle</span><br><span style='font-size:0.8em;color:gray'>Subsubtitle</span>"},
+        title = {'text': 'Erro médio absoluto'},
+        #delta = {'reference': 400, 'relative': True},
+        domain = {'row': 0, 'column': 1}))
+
+    fig.update_layout(
+        grid = {'rows': 1, 'columns': 2, 'pattern': "independent"},
+        template = {'data' : {'indicator': [{
+            'title': {'text': "Speed"},
+            'mode' : "number+delta+gauge",
+            'delta' : {'reference': 90}}]
+                             }})
+
     return fig
