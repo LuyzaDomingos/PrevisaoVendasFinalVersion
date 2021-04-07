@@ -194,5 +194,5 @@ def get_indicators_figure(filtered_data, forecast, product, split_date):
             'mode' : "number+delta+gauge",
             'delta' : {'reference': 90}}]
                              }})
-
+    
     return fig

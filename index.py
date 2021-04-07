@@ -10,11 +10,19 @@ app.layout = html.Div([
     html.Div(id='page-content')
 ])
 
-index_page = html.Div(children=[html.Div(children=[
-    dcc.Link('Go to Page 1', href='/apps/app1', className='link'),
-    html.Br(),
-    dcc.Link('Go to Page 2', href='/apps/app2', className='link'),
-], className='landing')])
+
+index_page = html.Div(children =[
+    html.Div(
+        children=[
+            html.P(children="📈", className="header-emoji"),
+            html.H1(children="Previsão de Vendas", className="header-title"),
+            html.P(children="Visualização e previsão de séries temporais referentes à vendas de produtos", className="header-description"),
+            dcc.Link('Previsão por Produtos', href='/apps/app1',className = 'link'),
+            html.Br(),
+            dcc.Link('Previsão por Categorias', href='/apps/app2',className = 'link'),
+        ],className = "header",),
+    
+])
 
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])

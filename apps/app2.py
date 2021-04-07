@@ -63,8 +63,8 @@ layout = html.Div(children=[
     html.Div(
             children=[
                 html.P(children="📈", className="header-emoji"),
-                html.H1(children="Previsão de vendas", className="header-title"),
-                html.P(children="Visualização e previsão de séries temporais referentes à vendas de produtos", className="header-description"),
+                html.H1(children="Previsão de Vendas", className="header-title"),
+                html.P(children="Visualização e Previsão de séries temporais referentes à vendas de produtos", className="header-description"),
                 dcc.Link('Voltar à página inicial', href='index', className='link'),
             ],
             className="header",
