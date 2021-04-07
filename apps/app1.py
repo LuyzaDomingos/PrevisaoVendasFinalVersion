@@ -58,7 +58,7 @@ layout = html.Div(
         html.Div(
             children=[
                 html.P(children="📈", className="header-emoji"),
-                html.H1(children="Previsão de vendas", className="header-title"),
+                html.H1(children="Previsão de Vendas", className="header-title"),
                 html.P(children="Visualização e previsão de séries temporais referentes à vendas de produtos", className="header-description"),
                 dcc.Link('Voltar à página inicial', href='index', className='link'),
                 html.Button("Baixe a previsão (.csv)", id="bt-download", className="bt"),
