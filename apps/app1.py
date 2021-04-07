@@ -146,7 +146,7 @@ layout = html.Div(
             children=dcc.Graph(
                 id="indicators-chart", config={"displayModeBar": False}
             ),
-            className="wrapperSecond small",
+            className="wrapperSecond",
         ),
     ]
 )
