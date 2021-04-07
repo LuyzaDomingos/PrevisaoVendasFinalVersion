@@ -4,6 +4,10 @@ import pandas as pd
 from plotly.subplots import make_subplots
 from fbprophet import Prophet
 from sklearn.metrics import mean_absolute_error, mean_squared_error
+from random import randint
+
+import dash_core_components as dcc
+import dash_html_components as html
 
 # Criação do dataframe de feriados
 mothers = pd.DataFrame({
@@ -170,7 +174,7 @@ def get_indicators_figure(filtered_data, forecast, product, split_date):
     mad = mean_absolute_error(filtered_data[product][size_train:], forecast['yhat'][size_train:len(filtered_data)])
 
     fig = go.Figure()
-    fig.update_layout(height=230)
+    fig.update_layout(height=120, margin=dict(l=40, r=40, t=40, b=8))
 
     fig.add_trace(go.Indicator(
         mode = "number",
@@ -196,3 +200,81 @@ def get_indicators_figure(filtered_data, forecast, product, split_date):
                              }})
 
     return fig
+
+def get_list(base_dict):
+    child = []
+    i = 0
+
+    fig = go.Figure()
+    fig.update_layout(height=80, margin=dict(l=40, r=40, t=40, b=8), plot_bgcolor='rgb(255,0,0)')
+
+    fig.add_trace(go.Indicator(
+        mode = "number+delta",
+        value = randint(0, 999),
+        title = {"text": "Vendas Previstas"},
+        delta = {'reference': randint(0, 999), 'relative': True, 'position': 'right'},
+        domain = {'row': 0, 'column': 0}))
+
+    fig.add_trace(go.Indicator(
+        mode = "number+delta",
+        value = randint(0, 99),
+        title = {"text": "Estoque atual"},
+        delta = {'reference': randint(0, 99), 'relative': True, 'position': 'right'},
+        domain = {'row': 0, 'column': 1}))
+
+    fig.add_trace(go.Indicator(
+        mode = "number+delta",
+        value = randint(0, 9999999),
+        title = {"text": "Valor das vendas"},
+        number = {'prefix': "R$"},
+        delta = {'reference': randint(0, 9999999), 'relative': True, 'position': 'right'},
+        domain = {'row': 0, 'column': 2}))
+
+    fig.update_layout(
+        grid = {'rows': 1, 'columns': 3, 'pattern': "independent"},
+        template = {'data' : {'indicator': [{
+            'title': {'text': "Speed"},
+            'mode' : "number+delta+gauge",
+            'delta' : {'reference': 90}}]
+                             }})
+    child.append(html.Div(children=[dcc.Graph(id="sales-chart-period-header", config={"displayModeBar": False}, figure=fig)], className="card small-margin"))
+
+    for item in base_dict:
+        i += 1
+        if i > 20:
+            break
+        fig = go.Figure()
+        fig.update_layout(height=80, margin=dict(l=40, r=40, t=8, b=8), plot_bgcolor='#333333')
+
+        fig.add_trace(go.Indicator(
+            mode = "number+delta",
+            value = randint(0, 999),
+            title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
+            delta = {'reference': randint(0, 999), 'relative': True, 'position': 'right'},
+            domain = {'row': 0, 'column': 0}))
+
+        fig.add_trace(go.Indicator(
+            mode = "number+delta",
+            value = randint(0, 99),
+            title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
+            delta = {'reference': randint(0, 99), 'relative': True, 'position': 'right'},
+            domain = {'row': 0, 'column': 1}))
+
+        fig.add_trace(go.Indicator(
+            mode = "number+delta",
+            value = randint(0, 9999999),
+            title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
+            number = {'prefix': "R$"},
+            delta = {'reference': randint(0, 9999999), 'relative': True, 'position': 'right'},
+            domain = {'row': 0, 'column': 2}))
+
+        fig.update_layout(
+            grid = {'rows': 1, 'columns': 3, 'pattern': "independent"},
+            template = {'data' : {'indicator': [{
+                'title': {'text': "Speed"},
+                'mode' : "number+delta+gauge",
+                'delta' : {'reference': 90}}]
+                                 }})
+        child.append(html.Div(children=[dcc.Link("        📈  " + item, href='index', className='link white-bg'), dcc.Graph(id="sales-chart-period-" + item, config={"displayModeBar": False}, figure=fig)], className="card small-margin"))
+
+    return child

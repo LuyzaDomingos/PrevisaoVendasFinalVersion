@@ -10,58 +10,23 @@ from dash.dependencies import Input, Output
 
 from app import app
 
-from random import randint
-
+from util import get_list
 suppliers_dict = json.load(open('previsao/fornecedores2.json'))
+sort_dict = {
+    'Vendas previstas': 'Vendas',
+    'Estoque disponível': 'Estoque',
+    'Valor das vendas': 'Valor',
+    'Ordem alfabética': 'A-Z'
+}
+order_dict = {
+    'Crescente': 1,
+    'Decrescente': 0
+}
 
-def foo():
-    child = []
-    i = 0
-    for supplier in suppliers_dict:
-        i += 1
-        if i > 10:
-            break
-        fig = go.Figure()
-        fig.update_layout(height=80, margin=dict(l=40, r=40, t=8, b=8))
-
-        fig.add_trace(go.Indicator(
-            mode = "number+delta",
-            value = randint(0, 999),
-            title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-            delta = {'reference': randint(0, 999), 'relative': True, 'position': 'right'},
-            domain = {'row': 0, 'column': 0}))
-
-        fig.add_trace(go.Indicator(
-            mode = "number+delta",
-            value = randint(0, 99),
-            #title = {'text': "<span style=='font-size:14px'>Estoque atual</span>"},
-            title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-            delta = {'reference': randint(0, 99), 'relative': True, 'position': 'right'},
-            domain = {'row': 0, 'column': 1}))
-
-        fig.add_trace(go.Indicator(
-            mode = "number+delta",
-            value = randint(0, 9999999),
-            #title = {'text': "<span style=='font-size:14px'>Valor das vendas</span>"},
-            title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-            number = {'prefix': "R$"},
-            delta = {'reference': randint(0, 9999999), 'relative': True, 'position': 'right'},
-            domain = {'row': 0, 'column': 2}))
-
-        fig.update_layout(
-            grid = {'rows': 1, 'columns': 3, 'pattern': "independent"},
-            template = {'data' : {'indicator': [{
-                'title': {'text': "Speed"},
-                'mode' : "number+delta+gauge",
-                'delta' : {'reference': 90}}]
-                                 }})
-        child.append(html.Div(children=[dcc.Link("        📈  " + supplier, href='index', className='link white-bg'), dcc.Graph(id="sales-chart-period-"+supplier, config={"displayModeBar": False}, figure=fig)], className="card small-margin"))
-
-    return child
+child = get_list(suppliers_dict)
 
 layout = html.Div(children=[
-    html.Div(
-            children=[
+    html.Div(children=[
                 html.P(children="📈", className="header-emoji"),
                 html.H1(children="Previsão de vendas", className="header-title"),
                 html.P(children="Visualização e previsão de séries temporais referentes à vendas de produtos", className="header-description"),
@@ -70,10 +35,40 @@ layout = html.Div(children=[
             className="header",
         ),
     html.Div(
-            children=foo(),
+            children=[
+                html.Div(
+                    children=[
+                        html.Div(children="Ordernar por", className="menu-title"),
+                        dcc.Dropdown(
+                            id="criteria-selector",
+                            options=[{"label": key, "value": value} for key, value in sort_dict.items()],
+                            value="A-Z",
+                            clearable=False,
+                            className="dropdown",
+                        ),
+                    ]
+                ),
+                html.Div(
+                    children=[
+                        html.Div(children="Ordem", className="menu-title"),
+                        dcc.Dropdown(
+                            id="order-selector",
+                            options=[{"label": key, "value": value} for key, value in order_dict.items()],
+                            value=1,
+                            clearable=False,
+                            className="dropdown",
+                        ),
+                    ]
+                ),
+            ],
+            className="menu full",
+        ),
+    html.Div(
+            children=child,
             className="wrapper",
         ),
-])
+    ]
+)
 
 @app.callback(
     Output('app-1-display-value', 'children'),
