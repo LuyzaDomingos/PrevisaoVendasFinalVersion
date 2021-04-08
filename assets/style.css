@@ -24,7 +24,6 @@ body {
     margin: 0 auto;
 }
 
-
 .header-description {
     color: #333;
     margin: 4px auto;
@@ -41,7 +40,7 @@ body {
     margin-top: 32px;
 }
 
-.wrapperSecond{
+.wrapperSecond {
     margin-right: auto;
     margin-left: auto;
     max-width: 1024px;
@@ -134,8 +133,6 @@ body {
     padding-top: 1%;
 }
 
-
-
 a.link {
     display: block;
 }
@@ -165,4 +162,20 @@ a.link {
     padding-left: 24px;
     padding-right: 24px;
     margin: -80px auto 0 auto;
+}
+
+img {
+    border-style: solid;
+    border-width: 4px;
+    border-left-width: 32px;
+    border-right-width: 12px;
+    border-color: white;
+    max-height: 32px;
+    max-width: 32px;
+    background-color: white;
+}
+
+.class-header {
+    display: flex;
+    justify-content: space-between;
 }

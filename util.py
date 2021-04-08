@@ -9,6 +9,8 @@ from random import randint
 import dash_core_components as dcc
 import dash_html_components as html
 
+from app import app
+
 # Criação do dataframe de feriados
 mothers = pd.DataFrame({
     'holiday': 'Dia das mães',
@@ -203,7 +205,6 @@ def get_indicators_figure(filtered_data, forecast, product, split_date):
 
 def get_list(base_dict):
     child = []
-    i = 0
 
     fig = go.Figure()
     fig.update_layout(height=80, margin=dict(l=40, r=40, t=40, b=8), plot_bgcolor='rgb(255,0,0)')
@@ -240,9 +241,6 @@ def get_list(base_dict):
     child.append(html.Div(children=[dcc.Graph(id="sales-chart-period-header", config={"displayModeBar": False}, figure=fig)], className="card small-margin"))
 
     for item in base_dict:
-        i += 1
-        if i > 20:
-            break
         fig = go.Figure()
         fig.update_layout(height=80, margin=dict(l=40, r=40, t=8, b=8), plot_bgcolor='#333333')
 
@@ -275,6 +273,6 @@ def get_list(base_dict):
                 'mode' : "number+delta+gauge",
                 'delta' : {'reference': 90}}]
                                  }})
-        child.append(html.Div(children=[dcc.Link("        📈  " + item, href='index', className='link white-bg'), dcc.Graph(id="sales-chart-period-" + item, config={"displayModeBar": False}, figure=fig)], className="card small-margin"))
+        child.append(html.Div(children=[html.Div(children=[html.Img(src=app.get_asset_url('categorias/' + item + '.png')), dcc.Link(item, href='index', className='link white-bg')], className='class-header'), dcc.Graph(id="sales-chart-period-" + item, config={"displayModeBar": False}, figure=fig)], className="card small-margin"))
 
     return child

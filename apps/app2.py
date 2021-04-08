@@ -11,7 +11,9 @@ from dash.dependencies import Input, Output
 from app import app
 
 from util import get_list
-suppliers_dict = json.load(open('previsao/fornecedores2.json'))
+
+cats = json.load(open('previsao/subcategorias.json'))
+
 sort_dict = {
     'Vendas previstas': 'Vendas',
     'Estoque disponível': 'Estoque',
@@ -23,7 +25,7 @@ order_dict = {
     'Decrescente': 0
 }
 
-child = get_list(suppliers_dict)
+child = get_list(cats)
 
 layout = html.Div(children=[
     html.Div(children=[
