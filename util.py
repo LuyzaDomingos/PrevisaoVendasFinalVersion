@@ -273,6 +273,14 @@ def get_list(base_dict):
                 'mode' : "number+delta+gauge",
                 'delta' : {'reference': 90}}]
                                  }})
-        child.append(html.Div(children=[html.Div(children=[html.Img(src=app.get_asset_url('categorias/' + item + '.png')), dcc.Link(item, href='index', className='link white-bg')], className='class-header'), dcc.Graph(id="sales-chart-period-" + item, config={"displayModeBar": False}, figure=fig)], className="card small-margin"))
+        child.append(html.Div(children=[
+            dcc.Link("    " + item, href='index', className='link white-bg'), 
+            html.Div(children=[
+                html.Img(src=app.get_asset_url('categorias/' + item + '.png')),
+                dcc.Graph(id="sales-chart-period-" + item, config={"displayModeBar": False}, figure=fig),
+                html.Img(src=app.get_asset_url('graficos.png'), className='yellow'),
+                html.Img(src=app.get_asset_url('relatorio.png'), className='yellow')], 
+                className='class-header')
+            ], className="card small-margin"))
 
     return child
