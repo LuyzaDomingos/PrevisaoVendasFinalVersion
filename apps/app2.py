@@ -13,25 +13,24 @@ from app import app
 from util import get_list
 
 cats = json.load(open('previsao/subcategorias.json'))
+facts = pd.read_csv("previsao/fatos.csv")
 
 sort_dict = {
-    'Vendas previstas': 'Vendas',
-    'Estoque disponível': 'Estoque',
-    'Valor das vendas': 'Valor',
-    'Ordem alfabética': 'A-Z'
+    'Vendas previstas': 'Venda prevista',
+    'Estoque atual': 'Estoque atual',
+    'Valor das vendas': 'Valor venda',
+    'Ordem alfabética': 'Categoria'
 }
 order_dict = {
     'Crescente': 1,
     'Decrescente': 0
 }
 
-child = get_list(cats)
-
 layout = html.Div(children=[
     html.Div(children=[
                 html.P(children="📈", className="header-emoji"),
-                html.H1(children="Previsão de Vendas", className="header-title"),
-                html.P(children="Visualização e Previsão de séries temporais referentes à vendas de produtos", className="header-description"),
+                html.H1(children="Listagem de categorias", className="header-title"),
+                html.P(children="Indicadores de vendas, estoque e valores. Os dados são fictícios. WIP.", className="header-description"),
                 dcc.Link('Voltar à página inicial', href='index', className='link'),
             ],
             className="header",
@@ -44,7 +43,7 @@ layout = html.Div(children=[
                         dcc.Dropdown(
                             id="criteria-selector",
                             options=[{"label": key, "value": value} for key, value in sort_dict.items()],
-                            value="A-Z",
+                            value="Venda prevista",
                             clearable=False,
                             className="dropdown",
                         ),
@@ -56,7 +55,7 @@ layout = html.Div(children=[
                         dcc.Dropdown(
                             id="order-selector",
                             options=[{"label": key, "value": value} for key, value in order_dict.items()],
-                            value=1,
+                            value=0,
                             clearable=False,
                             className="dropdown",
                         ),
@@ -66,11 +65,18 @@ layout = html.Div(children=[
             className="menu full",
         ),
     html.Div(
-            children=child,
+            id='class-list',
             className="wrapper",
         ),
     ]
 )
+
+@app.callback(
+    [Output('class-list', 'children')],
+    [Input('criteria-selector', 'value'), Input('order-selector', 'value')]
+    )
+def sort_list(criteria, order):
+    return [get_list(facts, sort_by=criteria, ascending=order)]
 
 @app.callback(
     [Output('app-1-display-value', 'children')],

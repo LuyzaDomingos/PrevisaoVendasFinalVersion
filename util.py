@@ -203,81 +203,75 @@ def get_indicators_figure(filtered_data, forecast, product, split_date):
 
     return fig
 
-def get_list(base_dict):
+def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=2021):
+    filtered_facts = facts.loc[(facts['Mes'] == month) & (facts['Ano'] == year)]
+    filtered_facts = filtered_facts.sort_values(by=sort_by, ascending=ascending)
     child = []
 
     fig = go.Figure()
     fig.update_layout(height=80, margin=dict(l=40, r=40, t=40, b=8), plot_bgcolor='rgb(255,0,0)')
-
+    # Soma de todas as vendas previstas
     fig.add_trace(go.Indicator(
         mode = "number+delta",
-        value = randint(0, 999),
+        value = filtered_facts['Venda prevista'].sum(),
         title = {"text": "Vendas Previstas"},
-        delta = {'reference': randint(0, 999), 'relative': True, 'position': 'right'},
+        delta = {'reference': filtered_facts['Venda anterior'].sum(), 'relative': True, 'position': 'right'},
         domain = {'row': 0, 'column': 0}))
-
+    # Soma de todos os estoques
     fig.add_trace(go.Indicator(
         mode = "number+delta",
-        value = randint(0, 99),
+        value = filtered_facts['Estoque atual'].sum(),
         title = {"text": "Estoque atual"},
-        delta = {'reference': randint(0, 99), 'relative': True, 'position': 'right'},
+        delta = {'reference': filtered_facts['Estoque anterior'].sum(), 'relative': True, 'position': 'right'},
         domain = {'row': 0, 'column': 1}))
-
+    # Soma de todos os valores
     fig.add_trace(go.Indicator(
         mode = "number+delta",
-        value = randint(0, 9999999),
+        value = filtered_facts['Valor venda'].sum(),
         title = {"text": "Valor das vendas"},
         number = {'prefix': "R$"},
-        delta = {'reference': randint(0, 9999999), 'relative': True, 'position': 'right'},
+        delta = {'reference': filtered_facts['Valor anterior'].sum(), 'relative': True, 'position': 'right'},
         domain = {'row': 0, 'column': 2}))
 
-    fig.update_layout(
-        grid = {'rows': 1, 'columns': 3, 'pattern': "independent"},
-        template = {'data' : {'indicator': [{
-            'title': {'text': "Speed"},
-            'mode' : "number+delta+gauge",
-            'delta' : {'reference': 90}}]
-                             }})
+    grid = {'rows': 1, 'columns': 3, 'pattern': "independent"}
+    template = {'data' : {'indicator': [{'title': {'text': "Speed"}, 'mode' : "number+delta+gauge", 'delta' : {'reference': 90}}]}}
+    fig.update_layout(grid=grid, template=template)
+
     child.append(html.Div(children=[dcc.Graph(id="sales-chart-period-header", config={"displayModeBar": False}, figure=fig)], className="card small-margin"))
 
-    for item in base_dict:
+    for category in filtered_facts['Categoria'].unique():
         fig = go.Figure()
         fig.update_layout(height=80, margin=dict(l=40, r=40, t=8, b=8), plot_bgcolor='#333333')
-
+        # Indicador de vendas previstas
         fig.add_trace(go.Indicator(
             mode = "number+delta",
-            value = randint(0, 999),
+            value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Venda prevista'].values[0],
             title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-            delta = {'reference': randint(0, 999), 'relative': True, 'position': 'right'},
+            delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Venda anterior'].values[0], 'relative': True, 'position': 'right'},
             domain = {'row': 0, 'column': 0}))
-
+        # Indicador de estoque
         fig.add_trace(go.Indicator(
             mode = "number+delta",
-            value = randint(0, 99),
+            value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Estoque atual'].values[0],
             title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-            delta = {'reference': randint(0, 99), 'relative': True, 'position': 'right'},
+            delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Estoque anterior'].values[0], 'relative': True, 'position': 'right'},
             domain = {'row': 0, 'column': 1}))
-
+        # Indicador de valor
         fig.add_trace(go.Indicator(
             mode = "number+delta",
-            value = randint(0, 9999999),
+            value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Valor venda'].values[0],
             title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
             number = {'prefix': "R$"},
-            delta = {'reference': randint(0, 9999999), 'relative': True, 'position': 'right'},
+            delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Valor anterior'].values[0], 'relative': True, 'position': 'right'},
             domain = {'row': 0, 'column': 2}))
 
-        fig.update_layout(
-            grid = {'rows': 1, 'columns': 3, 'pattern': "independent"},
-            template = {'data' : {'indicator': [{
-                'title': {'text': "Speed"},
-                'mode' : "number+delta+gauge",
-                'delta' : {'reference': 90}}]
-                                 }})
+        fig.update_layout(grid=grid, template=template)
+
         child.append(html.Div(children=[
-            dcc.Link("    " + item, href='index', className='link white-bg'), 
+            dcc.Link("    " + category, href='index', className='link white-bg'), 
             html.Div(children=[
-                html.Img(src=app.get_asset_url('categorias/' + item + '.png')),
-                dcc.Graph(id="sales-chart-period-" + item, config={"displayModeBar": False}, figure=fig),
+                html.Img(src=app.get_asset_url('categorias/' + category + '.png')),
+                dcc.Graph(id="sales-chart-period-" + category, config={"displayModeBar": False}, figure=fig),
                 html.Img(src=app.get_asset_url('graficos.png'), className='yellow'),
                 html.Img(src=app.get_asset_url('relatorio.png'), className='yellow')], 
                 className='class-header')
