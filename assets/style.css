@@ -10,6 +10,10 @@ body {
     padding: 16px 0 0 0;
 }
 
+.category {
+    height: 150px;
+}
+
 .header-emoji {
     font-size: 48px;
     margin: 0 auto;
@@ -103,23 +107,6 @@ body {
     color: #555;
 }
 
-.landing {
-    height: 50%;
-    width: 60%;
-    display: flex;
-    justify-content: space-evenly;
-    padding-top: 1%;
-    padding-bottom: 1%;
-    padding-left: 1%;
-    padding-right: 1%;
-    background-color: #f7c700;
-    position: absolute;
-    left: 50%;
-    top: 78%;
-    -webkit-transform: translate(-50%, -50%);
-    transform: translate(-50%, -50%);
-}
-
 .link {
     background-color: #f7c700;
     border: none;
@@ -173,7 +160,7 @@ img {
     background-color: white;
 }
 
-.yellow {
+.yellow-bg {
     background-color: #f7c700;
     border-color: #f7c700;
     border-width: 4px;
@@ -184,4 +171,40 @@ img {
     display: flex;
     justify-content: center;
     background-color: white;
+}
+
+.title {
+    margin: 4px auto;
+    width: 100%;
+    text-align:left;
+    padding: 8px 0 8px 14px;
+    font-size: 18px;
+}
+
+.white {
+    background-color: white;
+}
+
+.container {
+    height: 570px;
+    width: 100%;
+}
+
+.left {
+    float: left;
+    width: 34%;
+    height: 100%;
+    
+    border: 24px solid black;
+    box-sizing: border-box;
+}
+
+.right {
+  float: left;
+  width: 66%;
+  height: 100%;
+  
+  border: 24px solid black;
+  border-left-width: 0px;
+  box-sizing: border-box;
 }

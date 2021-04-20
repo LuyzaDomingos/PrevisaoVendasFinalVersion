@@ -1,9 +1,6 @@
 import json
 import pandas as pd
 
-import plotly.express as px
-import plotly.graph_objects as go
-
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
@@ -77,10 +74,3 @@ layout = html.Div(children=[
     )
 def sort_list(criteria, order):
     return [get_list(facts, sort_by=criteria, ascending=order)]
-
-@app.callback(
-    [Output('app-1-display-value', 'children')],
-    [Input('app-1-dropdown', 'value')]
-    )
-def display_value(value):
-    return 'You have selected "{}"'.format(value)

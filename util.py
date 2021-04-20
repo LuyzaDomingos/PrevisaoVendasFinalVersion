@@ -8,8 +8,11 @@ from random import randint
 
 import dash_core_components as dcc
 import dash_html_components as html
+from dash_table import DataTable
 
 from app import app
+
+from random import randint
 
 # Criação do dataframe de feriados
 mothers = pd.DataFrame({
@@ -68,9 +71,10 @@ carnival = pd.DataFrame({
 })
 
 holidays = pd.concat((mothers, fathers, valentines, christmas, bf, childrens, easter, new_year))
+legend = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
 
 def heroku():
-    return True
+    return False
 
 def get_forecast_figure(filtered_data, product, split_date, freq='D'):
     size_train = len(filtered_data[:split_date])
@@ -143,14 +147,16 @@ def get_forecast_figure(filtered_data, product, split_date, freq='D'):
     fig.layout.xaxis.gridcolor='rgba(189, 189, 189, 0.5)'
     fig.layout.yaxis.gridcolor='rgba(189, 189, 189, 0.5)'
     fig.layout.plot_bgcolor='rgba(255, 255, 255, 1)'
-
+    fig.update_layout(legend=legend)
+            
     return fig, forecast
     
 def get_sales_figure(filtered_data, product):
     # Criar uma figura com eixos secundários
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.update_layout(title_text="Vendas observadas", xaxis_range=['2018-01-01', '2021-03-12'])
-    
+    fig.update_layout(legend=legend)
+        
     # Adicionar as linhas
     fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product].cumsum(), name="Vendas acumuladas", line={'color': '#045dd1'}), secondary_y=False)
     fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product], name="Vendas no período", line={'color': 'rgba(101, 156, 0, 0.8)'}), secondary_y=True)
@@ -272,9 +278,49 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
             html.Div(children=[
                 html.Img(src=app.get_asset_url('categorias/' + category + '.png')),
                 dcc.Graph(id="sales-chart-period-" + category, config={"displayModeBar": False}, figure=fig),
-                html.Img(src=app.get_asset_url('graficos.png'), className='yellow'),
-                html.Img(src=app.get_asset_url('relatorio.png'), className='yellow')], 
+                html.Img(src=app.get_asset_url('graficos.png'), className='yellow-bg'),
+                html.Img(src=app.get_asset_url('relatorio.png'), className='yellow-bg')], 
                 className='class-header')
             ], className="card small-margin"))
 
     return child
+
+def get_top_list(data, category_products, month=3, year=2021, top=5):
+    filtered_data = data[category_products]
+    filtered_data.index = pd.to_datetime(filtered_data.index)
+    filtered_data = filtered_data.loc[(data.index.month == month) & (data.index.year == year)]
+
+    num = top
+    if(len(category_products) < num): # Em algumas categorias o número de produtos pertencentes é menor que 5
+        top = filtered_data.sum().sort_values(ascending=False)
+        num = len(category_products)
+    else:
+        top = filtered_data.sum().sort_values(ascending=False)[:num]
+    
+    top_df = pd.DataFrame({'Produto': top.index, 'Quantidade vendida': top.values}, index=range(1, num+1))
+        
+    return DataTable(id='top-table',
+                    columns=[{'name': column, 'id': column} for column in top_df.columns],
+                    data=top_df.to_dict('records'),
+                    style_as_list_view=True,
+                    style_data={
+                        'textAlign': 'center',
+                        'whiteSpace': 'normal',
+                        'width': '100%',
+                        'overflowY': 'auto',
+                        'fontFamily': 'Avenir',
+                        'fontSize': '16px',
+                        'padding': '12px'
+                    },
+                    style_header={
+                        'backgroundColor': 'rgb(230, 230, 230)',
+                        'textAlign': 'center',
+                        'fontFamily': 'Avenir',
+                        'fontSize': '16px',
+                        'padding': '12px'
+                    },
+                    style_data_conditional=[{
+                        'if': {'row_index': 'odd'},
+                        'backgroundColor': 'rgb(248, 248, 248)'
+                    }])
+    
