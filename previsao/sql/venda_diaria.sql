@@ -35,6 +35,7 @@ CREATE TABLE produto (
 CREATE TABLE loja (
 	loja_id serial,
 	nome varchar(255) NOT NULL,
+	sigla varchar(255) NOT NULL,
 	PRIMARY KEY (loja_id)
 );
 
