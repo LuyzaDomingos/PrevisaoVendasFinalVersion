@@ -208,3 +208,37 @@ img {
   border-left-width: 0px;
   box-sizing: border-box;
 }
+
+.flex-container {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  display: flex;
+}
+
+.center {
+    justify-content: center;
+}
+
+.flex-item {
+  background: #f7c700;
+  border: 2px solid #f7c700;
+  padding: 5px;
+  width: 120px;
+  height: 40px;
+  margin: 5px;
+  font-size: 14px;
+  text-decoration: underline;
+  font-weight: bold;
+  text-align: center;
+}
+
+.flex-item:active {
+    border: 4px solid black;
+    color: black;
+}
+
+.selected {
+    border: 4px solid black;
+    color: black;
+}

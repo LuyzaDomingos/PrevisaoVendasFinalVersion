@@ -3,7 +3,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 
 from app import app
-from apps import app1, app2, app3
+from apps import app1, app2, app3, app4
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
@@ -17,11 +17,10 @@ index_page = html.Div(children =[
             html.H1(children="Previsão de Vendas", className="header-title"),
             html.P(children="Visualização e previsão de séries temporais referentes à vendas de produtos", className="header-description"),
             dcc.Link('Previsão por Produtos', href='/apps/app1',className='link'),
-            html.Br(),
             dcc.Link('Previsão por Categorias (WIP)', href='/apps/app2',className='link'),
-            html.Br(),
-            dcc.Link('Panorama de Categoria (WIP)', href='/apps/app3', className='link')
-        ],className = "header",),
+            dcc.Link('Panorama de Categoria (WIP)', href='/apps/app3', className='link'),
+            dcc.Link('Painel de Vendas', href='/apps/app4', className='link')
+        ],className = "header"),
     
 ])
 
@@ -34,6 +33,8 @@ def display_page(pathname):
         return app2.layout
     elif pathname == '/apps/app3':
         return app3.layout
+    elif pathname == '/apps/app4':
+        return app4.layout
     else:
         return index_page
 

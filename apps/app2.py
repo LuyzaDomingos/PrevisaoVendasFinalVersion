@@ -1,3 +1,4 @@
+# Aplicativo 2 (Listagem de categorias)
 import json
 import pandas as pd
 

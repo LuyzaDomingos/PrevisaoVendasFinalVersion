@@ -209,79 +209,129 @@ def get_indicators_figure(filtered_data, forecast, product, split_date):
 
     return fig
 
-def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=2021):
+def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=2021, sales_panel=False, items=None):
     filtered_facts = facts.loc[(facts['Mes'] == month) & (facts['Ano'] == year)]
     filtered_facts = filtered_facts.sort_values(by=sort_by, ascending=ascending)
     child = []
 
     fig = go.Figure()
     fig.update_layout(height=80, margin=dict(l=40, r=40, t=40, b=8), plot_bgcolor='rgb(255,0,0)')
+    
+    titles = ["Vendas no período", "Valor das vendas"]
+    n_cols = 2
+    if sales_panel is False:
+        titles.insert(1, "Estoque atual")
+        titles[0] = "Venda prevista"
+        n_cols = 3
+    
     # Soma de todas as vendas previstas
     fig.add_trace(go.Indicator(
         mode = "number+delta",
         value = filtered_facts['Venda prevista'].sum(),
-        title = {"text": "Vendas Previstas"},
+        title = {"text": titles[0]},
         delta = {'reference': filtered_facts['Venda anterior'].sum(), 'relative': True, 'position': 'right'},
         domain = {'row': 0, 'column': 0}))
-    # Soma de todos os estoques
-    fig.add_trace(go.Indicator(
-        mode = "number+delta",
-        value = filtered_facts['Estoque atual'].sum(),
-        title = {"text": "Estoque atual"},
-        delta = {'reference': filtered_facts['Estoque anterior'].sum(), 'relative': True, 'position': 'right'},
-        domain = {'row': 0, 'column': 1}))
-    # Soma de todos os valores
-    fig.add_trace(go.Indicator(
-        mode = "number+delta",
-        value = filtered_facts['Valor venda'].sum(),
-        title = {"text": "Valor das vendas"},
-        number = {'prefix': "R$"},
-        delta = {'reference': filtered_facts['Valor anterior'].sum(), 'relative': True, 'position': 'right'},
-        domain = {'row': 0, 'column': 2}))
-
-    grid = {'rows': 1, 'columns': 3, 'pattern': "independent"}
+    
+    if sales_panel is False:
+        # Soma de todos os estoques
+        fig.add_trace(go.Indicator(
+            mode = "number+delta",
+            value = filtered_facts['Estoque atual'].sum(),
+            title = {"text": titles[1]},
+            delta = {'reference': filtered_facts['Estoque anterior'].sum(), 'relative': True, 'position': 'right'},
+            domain = {'row': 0, 'column': 1}))
+        # Soma de todos os valores
+        fig.add_trace(go.Indicator(
+            mode = "number+delta",
+            value = filtered_facts['Valor venda'].sum(),
+            title = {"text": titles[2]},
+            number = {'prefix': "R$"},
+            delta = {'reference': filtered_facts['Valor anterior'].sum(), 'relative': True, 'position': 'right'},
+            domain = {'row': 0, 'column': 2}))
+    else:
+        # Soma de todos os valores
+        fig.add_trace(go.Indicator(
+            mode = "number+delta",
+            value = filtered_facts['Valor venda'].sum(),
+            title = {"text": titles[1]},
+            number = {'prefix': "R$"},
+            delta = {'reference': filtered_facts['Valor anterior'].sum(), 'relative': True, 'position': 'right'},
+            domain = {'row': 0, 'column': 1}))
+            
+    grid = {'rows': 1, 'columns': n_cols, 'pattern': "independent"}
     template = {'data' : {'indicator': [{'title': {'text': "Speed"}, 'mode' : "number+delta+gauge", 'delta' : {'reference': 90}}]}}
     fig.update_layout(grid=grid, template=template)
 
     child.append(html.Div(children=[dcc.Graph(id="sales-chart-period-header", config={"displayModeBar": False}, figure=fig)], className="card small-margin"))
 
-    for category in filtered_facts['Categoria'].unique():
+    if sales_panel is True:
+        itr = items
+    else:
+        itr = filtered_facts['Categoria'].unique()
+        
+    for category in itr:
         fig = go.Figure()
         fig.update_layout(height=80, margin=dict(l=40, r=40, t=8, b=8), plot_bgcolor='#333333')
-        # Indicador de vendas previstas
-        fig.add_trace(go.Indicator(
-            mode = "number+delta",
-            value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Venda prevista'].values[0],
-            title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-            delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Venda anterior'].values[0], 'relative': True, 'position': 'right'},
-            domain = {'row': 0, 'column': 0}))
-        # Indicador de estoque
-        fig.add_trace(go.Indicator(
-            mode = "number+delta",
-            value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Estoque atual'].values[0],
-            title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-            delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Estoque anterior'].values[0], 'relative': True, 'position': 'right'},
-            domain = {'row': 0, 'column': 1}))
-        # Indicador de valor
-        fig.add_trace(go.Indicator(
-            mode = "number+delta",
-            value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Valor venda'].values[0],
-            title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-            number = {'prefix': "R$"},
-            delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Valor anterior'].values[0], 'relative': True, 'position': 'right'},
-            domain = {'row': 0, 'column': 2}))
-
+        if sales_panel is False:
+            # Indicador de vendas previstas
+            fig.add_trace(go.Indicator(
+                mode = "number+delta",
+                value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Venda prevista'].values[0],
+                title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
+                delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Venda anterior'].values[0], 'relative': True, 'position': 'right'},
+                domain = {'row': 0, 'column': 0}))
+            # Indicador de estoque
+            fig.add_trace(go.Indicator(
+                mode = "number+delta",
+                value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Estoque atual'].values[0],
+                title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
+                delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Estoque anterior'].values[0], 'relative': True, 'position': 'right'},
+                domain = {'row': 0, 'column': 1}))
+            # Indicador de valor
+            fig.add_trace(go.Indicator(
+                mode = "number+delta",
+                value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Valor venda'].values[0],
+                title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
+                number = {'prefix': "R$"},
+                delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Valor anterior'].values[0], 'relative': True, 'position': 'right'},
+                domain = {'row': 0, 'column': 2}))
+        else:
+            # Indicador de vendas
+            fig.add_trace(go.Indicator(
+                mode = "number+delta",
+                value = randint(0, 999),
+                title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
+                delta = {'reference': randint(0, 999), 'relative': True, 'position': 'right'},
+                domain = {'row': 0, 'column': 0}))
+            # Indicador de valor
+            fig.add_trace(go.Indicator(
+                mode = "number+delta",
+                value = randint(0, 999999),
+                title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
+                number = {'prefix': "R$"},
+                delta = {'reference': randint(0, 999999), 'relative': True, 'position': 'right'},
+                domain = {'row': 0, 'column': 1}))
+                
         fig.update_layout(grid=grid, template=template)
 
-        child.append(html.Div(children=[
-            dcc.Link("    " + category, href='index', className='link white-bg'), 
-            html.Div(children=[
-                html.Img(src=app.get_asset_url('categorias/' + category + '.png')),
-                dcc.Graph(id="sales-chart-period-" + category, config={"displayModeBar": False}, figure=fig),
-                html.Img(src=app.get_asset_url('graficos.png'), className='yellow-bg'),
-                html.Img(src=app.get_asset_url('relatorio.png'), className='yellow-bg')], 
-                className='class-header')
-            ], className="card small-margin"))
+        if sales_panel is False:
+            child.append(html.Div(children=[
+                dcc.Link("    " + category, href='index', className='link white-bg'),
+                html.Div(children=[
+                    html.Img(src=app.get_asset_url('categorias/' + category + '.png')),
+                    dcc.Graph(id="sales-chart-period-" + category, config={"displayModeBar": False}, figure=fig),
+                    html.Img(src=app.get_asset_url('graficos.png'), className='yellow-bg'),
+                    html.Img(src=app.get_asset_url('relatorio.png'), className='yellow-bg')],
+                    className='class-header')
+                ], className="card small-margin"))
+        else:
+            child.append(html.Div(children=[
+                dcc.Link("    " + category, href='index', className='link white-bg'),
+                html.Div(children=[
+                    dcc.Graph(id="sales-chart-period-" + category, config={"displayModeBar": False}, figure=fig),
+                    html.Img(src=app.get_asset_url('relatorio.png'), className='yellow-bg')],
+                    className='class-header')
+                ], className="card small-margin"))
 
     return child
 
@@ -292,13 +342,16 @@ def get_top_list(data, category_products, month=3, year=2021, top=5):
 
     num = top
     if(len(category_products) < num): # Em algumas categorias o número de produtos pertencentes é menor que 5
-        top = filtered_data.sum().sort_values(ascending=False)
+        top_series = filtered_data.sum().sort_values(ascending=False)
         num = len(category_products)
     else:
-        top = filtered_data.sum().sort_values(ascending=False)[:num]
-    
-    top_df = pd.DataFrame({'Produto': top.index, 'Quantidade vendida': top.values}, index=range(1, num+1))
+        top_series = filtered_data.sum().sort_values(ascending=False)[:num]
         
+    return  pd.DataFrame({'Produto': top_series.index, 'Qtd. vendida': top_series.values}, index=range(1, num+1))
+    
+def draw_top_list(data, category_products, month=3, year=2021, top=5):
+    top_df = get_top_list(data, category_products, month, year, top)
+    
     return DataTable(id='top-table',
                     columns=[{'name': column, 'id': column} for column in top_df.columns],
                     data=top_df.to_dict('records'),
