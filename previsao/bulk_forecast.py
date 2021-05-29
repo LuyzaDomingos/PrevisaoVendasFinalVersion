@@ -75,7 +75,7 @@ def bulk_forecast():
     out_forecast_uyhat = pd.DataFrame(np.zeros((365, len(in_data.columns))), columns=in_data.columns, index=future['ds'])
     
     i = 0
-    for product in in_data.columns[:10]: # Fazer a previsão de tudo
+    for product in in_data.columns: # Fazer a previsão de tudo
         i += 1
         print("(%d / %d) Gerando previsão de %s" % (i, len(in_data.columns), product))
         # Criar o dataframe no formato do prophet
