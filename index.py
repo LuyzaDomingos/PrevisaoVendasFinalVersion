@@ -3,7 +3,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 
 from app import app
-from apps import app1, app2, app3##,app4
+from apps import app1, app2, app3,app4
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
@@ -39,5 +39,5 @@ def display_page(pathname):
         return index_page
 
 if __name__ == '__main__':
-    app.run_server(debug=True,host='184.72.194.142',port=22)
+    app.run_server(debug=True)
 
