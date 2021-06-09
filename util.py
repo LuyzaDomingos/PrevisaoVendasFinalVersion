@@ -222,7 +222,14 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
     template = {'data' : {'indicator': [{'title': {'text': "Speed"}, 'mode' : "number+delta+gauge", 'delta' : {'reference': 90}}]}}
     fig.update_layout(grid=grid, template=template)
 
-    child.append(html.Div(children=[dcc.Graph(id="sales-chart-period-header", config={"displayModeBar": False}, figure=fig)], className="card small-margin"))
+    child.append(html.Div(children=[#dcc.Link("    ", href='index', className='link white-bg'),
+                html.Div(children=[
+                    html.Img(src=app.get_asset_url('transparent.png')),
+                    dcc.Graph(id="sales-chart-period-header", config={"displayModeBar": False}, figure=fig),
+                    html.Img(src=app.get_asset_url('transparent.png')),
+                    html.Img(src=app.get_asset_url('transparent.png'))],
+                    className='class-header')
+                ], className="card small-margin"))
 
     if sales_panel is True:
         itr = items
@@ -238,6 +245,7 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
                 mode = "number+delta",
                 value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Venda prevista'].values[0],
                 title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
+                number = {"font":{"size":32}},
                 delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Venda anterior'].values[0], 'relative': True, 'position': 'right'},
                 domain = {'row': 0, 'column': 0}))
             # Indicador de estoque
@@ -245,6 +253,7 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
                 mode = "number+delta",
                 value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Estoque atual'].values[0],
                 title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
+                number = {"font":{"size":32}},
                 delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Estoque anterior'].values[0], 'relative': True, 'position': 'right'},
                 domain = {'row': 0, 'column': 1}))
             # Indicador de valor
@@ -252,7 +261,7 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
                 mode = "number+delta",
                 value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Valor venda'].values[0],
                 title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-                number = {'prefix': "R$"},
+                number = {'prefix': "R$", "font":{"size":32}},
                 delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Valor anterior'].values[0], 'relative': True, 'position': 'right'},
                 domain = {'row': 0, 'column': 2}))
         else:
@@ -261,6 +270,7 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
                 mode = "number+delta",
                 value = randint(0, 999),
                 title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
+                number = {"font":{"size":42}},
                 delta = {'reference': randint(0, 999), 'relative': True, 'position': 'right'},
                 domain = {'row': 0, 'column': 0}))
             # Indicador de valor
@@ -268,7 +278,7 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
                 mode = "number+delta",
                 value = randint(0, 999999),
                 title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-                number = {'prefix': "R$"},
+                number = {'prefix': "R$", "font":{"size":42}},
                 delta = {'reference': randint(0, 999999), 'relative': True, 'position': 'right'},
                 domain = {'row': 0, 'column': 1}))
                 

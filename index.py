@@ -17,8 +17,8 @@ index_page = html.Div(children =[
             html.H1(children="Previsão de Vendas", className="header-title"),
             html.P(children="Visualização e previsão de séries temporais referentes à vendas de produtos", className="header-description"),
             dcc.Link('Previsão por Produtos', href='/apps/app1',className='link'),
-            dcc.Link('Previsão por Categorias (WIP)', href='/apps/app2',className='link'),
-            dcc.Link('Panorama de Categoria (WIP)', href='/apps/app3', className='link'),
+            dcc.Link('Previsão por Categorias', href='/apps/app2',className='link'),
+            dcc.Link('Panorama de Categoria', href='/apps/app3', className='link'),
             dcc.Link('Painel de Vendas', href='/apps/app4', className='link')
         ],className = "header"),
     
@@ -39,5 +39,5 @@ def display_page(pathname):
         return index_page
 
 if __name__ == '__main__':
-    app.run_server(host='0.0.0.0', debug=False)
+    app.run_server(host='127.0.0.1', debug=True)
 

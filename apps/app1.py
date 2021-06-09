@@ -31,8 +31,8 @@ data_m = pd.read_csv("previsao/MonGeral.csv", index_col=0)
 data_m.fillna(value=0, inplace=True)
 data_m.index = pd.to_datetime(data_m.index)
 data_m = data_m[:'2021-03-12']
-# Dicionário de fornecedores
-suppliers_dict = json.load(open('previsao/fornecedores2.json'))
+# Dicionário de categorias
+categories_dict = json.load(open('previsao/subcategorias.json'))
 # Dicionário de frequências
 freq_dict = {
     'Diário': 'D',
@@ -56,8 +56,8 @@ layout = html.Div(
                 html.H1(children="Previsão de Vendas", className="header-title"),
                 html.P(children="Visualização e previsão de séries temporais referentes à vendas de produtos", className="header-description"),
                 dcc.Link('Voltar à página inicial', href='index', className='link'),
-                html.Button("Baixe a previsão (.csv)", id="bt-download", className="bt"),
-                Download(id="download"),
+                #html.Button("Baixe a previsão (.csv)", id="bt-download", className="bt"),
+                #Download(id="download"),
             ],
             className="header",
         ),
@@ -65,11 +65,11 @@ layout = html.Div(
             children=[
                 html.Div(
                     children=[
-                        html.Div(children="Fornecedor", className="menu-title"),
+                        html.Div(children="Categoria", className="menu-title"),
                         dcc.Dropdown(
-                            id="supplier-filter",
-                            options=[{"label": key, "value": key} for key in list(suppliers_dict.keys())],
-                            value="TIM",
+                            id="category-filter",
+                            options=[{"label": key, "value": key} for key in list(categories_dict.keys())],
+                            value="ELETRO INFORMATICA",
                             clearable=False,
                             className="dropdown",
                         ),
@@ -82,9 +82,9 @@ layout = html.Div(
                             id="product-filter",
                             options=[
                                 {"label": product, "value": product}
-                                for product in suppliers_dict["TIM"]
+                                for product in categories_dict["ELETRO INFORMATICA"]
                             ],
-                            value="CHIP TIM INFINITY PRE HRD TRIPLO 4G",
+                            value="TABLET NB316 M7S 16GB QUAD CORE PRETO",
                             clearable=False,
                             className="dropdown",
                         ),
@@ -147,6 +147,7 @@ layout = html.Div(
 )
 
 # Callback do botão de baixar previsão
+'''
 @app.callback(
     Output("download", "data"),
     [Input("bt-download", "n_clicks"), Input("product-filter", "value"), Input("frequency-selector", "value")]
@@ -162,15 +163,15 @@ def download_forecast(n_clicks, product, frequency):
         return send_data_frame(forecast.to_csv, filename="Previsao_" + product.replace(" ", "_").replace("/", "_") + ".csv")
     except:
         return html.Div("Um erro ocorreu ao tentar obter a previsão!")
-    
+'''
 
-# Callback da seleção de fornecedor
+# Callback da seleção de categoria
 @app.callback(
     [Output("product-filter", "options"), Output("product-filter", "value")],
-    [Input("supplier-filter", "value")]
+    [Input("category-filter", "value")]
 )
-def update_products(supplier):
-    return [{"label": product, "value": product} for product in suppliers_dict[supplier]], suppliers_dict[supplier][0]
+def update_products(category):
+    return [{"label": product, "value": product} for product in categories_dict[category]], categories_dict[category][0]
 
 # Callback da seleção de produto, frequência, e data
 @app.callback(
