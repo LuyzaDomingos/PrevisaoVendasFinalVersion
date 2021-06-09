@@ -47,11 +47,6 @@ external_stylesheets = [
         "rel": "stylesheet",
     },
 ]
-
-products = data_d.columns
-if heroku() is True:
-    products = ['CONDICIONADOR DE AR TIPO SPLIT FIT CCSF9-R4', 'REFRIGERADOR ROC 31 BR']
-    suppliers_dict = {"ESMALTEC": ["REFRIGERADOR ROC 31 BR"], "VIVO": ["CHIP VIVO 4G 128K P19 HRS PRE"]}
     
 layout = html.Div(
     children=[
@@ -74,7 +69,7 @@ layout = html.Div(
                         dcc.Dropdown(
                             id="supplier-filter",
                             options=[{"label": key, "value": key} for key in list(suppliers_dict.keys())],
-                            value="ESMALTEC",
+                            value="TIM",
                             clearable=False,
                             className="dropdown",
                         ),
@@ -87,9 +82,9 @@ layout = html.Div(
                             id="product-filter",
                             options=[
                                 {"label": product, "value": product}
-                                for product in suppliers_dict["ESMALTEC"]
+                                for product in suppliers_dict["TIM"]
                             ],
-                            value="REFRIGERADOR ROC 31 BR",
+                            value="CHIP TIM INFINITY PRE HRD TRIPLO 4G",
                             clearable=False,
                             className="dropdown",
                         ),
@@ -142,12 +137,12 @@ layout = html.Div(
             ),
             className="wrapperSecond",
         ),
-        html.Div(
-            children=dcc.Graph(
-                id="indicators-chart", config={"displayModeBar": False}
-            ),
-            className="wrapperSecond",
-        ),
+        #html.Div(
+            #children=dcc.Graph(
+                #id="indicators-chart", config={"displayModeBar": False}
+            #),
+            #className="wrapperSecond",
+        #),
     ]
 )
 
@@ -181,7 +176,7 @@ def update_products(supplier):
 @app.callback(
 # Lembrete: Se tiver mais de uma chamada de Output(...) colocar em uma lista as multiplas chamadas
     #[Output("sales-chart-cumsum", "figure"), Output("sales-chart-period", "figure"), Output("forecast-chart", "figure")],
-    [Output("sales-chart-period", "figure"), Output("forecast-chart", "figure"), Output("indicators-chart", "figure")],
+    [Output("sales-chart-period", "figure"), Output("forecast-chart", "figure")], # Output("indicators-chart", "figure")
     [Input("product-filter", "value"), Input("frequency-selector", "value"), Input("date-range", "start_date"), Input("date-range", "end_date")]
 )
 def update_charts(product, frequency, start_date, end_date):
@@ -207,7 +202,7 @@ def update_charts(product, frequency, start_date, end_date):
     filtered_data = filtered_data.resample(frequency).sum()
     
     sales_period_chart_figure = get_sales_figure(filtered_data, product)
-    forecast_chart_figure, forecast = get_forecast_figure(filtered_data, product, '2021-01-01', frequency)
-    indicators_chart_figure = get_indicators_figure(filtered_data, forecast, product, '2021-01-01')
+    forecast_chart_figure, forecast = get_forecast_figure(filtered_data, product, '2021-03-16', frequency) 
+    #indicators_chart_figure = get_indicators_figure(filtered_data, forecast, product, '2021-03-16')
 
-    return sales_period_chart_figure, forecast_chart_figure, indicators_chart_figure
+    return sales_period_chart_figure, forecast_chart_figure#, indicators_chart_figure

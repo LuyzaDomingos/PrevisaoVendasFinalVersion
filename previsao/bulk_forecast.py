@@ -91,10 +91,10 @@ def bulk_forecast():
         out_forecast_uyhat[product] = forecast['yhat_upper'].apply(lambda x : 0 if x < 0 else round(x))
         out_forecast_lyhat[product] = forecast['yhat_lower'].apply(lambda x : 0 if x < 0 else round(x))
     
-    print("Previsões encerradas, salvando...")
+    print("Previsões encerradas, salvando...")
     out_forecast.to_csv('previsao_geral.csv')
     out_forecast_uyhat.to_csv('previsao_geral_yhat_upper.csv')
-    out_forecast_lyhat.to_csv('previsal_geral_yhat_lower.csv')
+    out_forecast_lyhat.to_csv('previsao_geral_yhat_lower.csv')
     print("Tudo certo, encerrando...")
     
 if __name__ == '__main__':

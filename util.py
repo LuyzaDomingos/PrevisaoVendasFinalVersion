@@ -14,64 +14,22 @@ from app import app
 
 from random import randint
 
-# Criação do dataframe de feriados
-mothers = pd.DataFrame({
-    'holiday': 'Dia das mães',
-    'ds': ['2015-05-10', '2016-05-08', '2017-05-14', '2018-05-13', '2019-05-12', '2020-05-10', '2021-05-09'],
-    'lower_window': 0,
-    'upper_window': 0
-})
-fathers = pd.DataFrame({
-    'holiday': 'Dia dos pais',
-    'ds': ['2015-08-09', '2016-08-14', '2017-08-13', '2018-08-12', '2019-08-11', '2020-08-09', '2021-06-20'],
-    'lower_window': 0,
-    'upper_window': 0
-})
-valentines = pd.DataFrame({
-    'holiday': 'Dia dos namorados',
-    'ds': ['2015-06-12', '2016-06-12', '2017-06-12', '2018-06-12', '2019-06-12', '2020-06-12', '2021-06-12'],
-    'lower_window': 0,
-    'upper_window': 0
-})
-christmas = pd.DataFrame({
-    'holiday': 'Natal',
-    'ds': ['2015-12-25', '2016-12-25', '2017-12-25', '2018-12-25', '2019-12-25', '2020-12-25', '2020-12-25'],
-    'lower_window': -1, # Incluindo a véspera
-    'upper_window': 0
-})
-bf = pd.DataFrame({
-    'holiday': 'Black friday',
-    'ds': ['2015-11-27', '2016-11-25', '2017-11-24', '2018-11-25', '2019-11-24', '2020-11-27', '2021-11-25'],
-    'lower_window': 0,
-    'upper_window': 0
-})
-childrens = pd.DataFrame({
-    'holiday': 'Dia das crianças',
-    'ds': ['2015-10-12', '2016-10-12', '2017-10-12', '2018-10-12', '2019-10-12', '2020-10-12', '2021-10-12'],
-    'lower_window': 0,
-    'upper_window': 0
-})
-easter = pd.DataFrame({
-    'holiday': 'Páscoa',
-    'ds': ['2015-04-05', '2016-03-27', '2017-04-16', '2018-04-01', '2019-04-21', '2020-04-12', '2021-04-04'], # Domingo de páscoa
-    'lower_window': -2, # Incluindo o fim de semana
-    'upper_window': 0
-})
-new_year = pd.DataFrame({
-    'holiday': 'Ano Novo',
-    'ds': ['2015-01-01', '2016-01-01', '2017-01-01', '2018-01-01', '2019-01-01', '2020-01-01', '2021-01-01'],
-    'lower_window': -1, # Adicionar a véspera
-    'upper_window': 0
-})
-carnival = pd.DataFrame({
-    'holiday': 'Carnaval',
-    'ds': ['2015-02-18', '2016-02-10', '2017-03-01', '2018-02-14', '2019-03-06', '2020-02-26', '2021-02-17'], # Quarta feira de cinzas
-    'lower_window': -4, # Incluindo sábado, domingo, segunda e terça
-    'upper_window': 0
-})
-
-holidays = pd.concat((mothers, fathers, valentines, christmas, bf, childrens, easter, new_year))
 legend = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+
+# Carregar as previsões
+yhat_df = pd.read_csv('previsao/previsao_geral.csv', index_col=0)
+yhat_lower_df = pd.read_csv('previsao/previsal_geral_yhat_lower.csv', index_col=0) # O nome do arquivo está correto, porém incorretamente escrito
+yhat_upper_df = pd.read_csv('previsao/previsao_geral_yhat_upper.csv', index_col=0)
+# Converter os índices para datetime
+yhat_df.index = pd.to_datetime(yhat_df.index)
+yhat_lower_df.index = pd.to_datetime(yhat_lower_df.index)
+yhat_upper_df.index = pd.to_datetime(yhat_upper_df.index)
+# Dicionário de previsões
+forecast_dict = {
+    'D': [yhat_df.resample('D').sum(), yhat_lower_df.resample('D').sum(), yhat_upper_df.resample('D').sum()],
+    'W-MON': [yhat_df.resample('W-MON').sum(), yhat_lower_df.resample('W-MON').sum(), yhat_upper_df.resample('W-MON').sum()],
+    'M': [yhat_df.resample('M').sum(), yhat_lower_df.resample('M').sum(), yhat_upper_df.resample('M').sum()]
+}
 
 def heroku():
     return False
@@ -79,6 +37,7 @@ def heroku():
 def get_forecast_figure(filtered_data, product, split_date, freq='D'):
     size_train = len(filtered_data[:split_date])
     size_test = len(filtered_data[split_date:])
+    '''
     path = "previsao/forecasts/" + freq + "/" + product.replace(" ", "_").replace("/", "_") + ".csv"
     # Uma espécie de cache para não repetir a computação do modelo toda vez que selecionar um produto
     try:
@@ -96,39 +55,39 @@ def get_forecast_figure(filtered_data, product, split_date, freq='D'):
         forecast.index = pd.to_datetime(forecast['ds'])
         if heroku() is False:
             forecast.to_csv(path)
-
+    
     forecast['yhat'] = forecast['yhat'].apply(lambda x : 0 if x < 0 else round(x))
     forecast['yhat_lower'] = forecast['yhat_lower'].apply(lambda x : 0 if x < 0 else round(x))
     forecast['yhat_upper'] = forecast['yhat_upper'].apply(lambda x : 0 if x < 0 else round(x))
-
-    fig = px.line(range_x=['2018-01-01', '2021-03-12'],
+    '''
+    fig = px.line(range_x=['2018-01-01', '2022-01-01'],
                     range_y=[0, max(filtered_data[product] * 1.1)],
                     labels={'y': 'Quantidade Vendida', 'x': 'Período'},
                     title='Projeção de vendas')
-
+    '''
     fig.add_trace(go.Scatter(x=filtered_data[size_train:].index, y=filtered_data[product][size_train:],
                         mode='markers',
                         name='Vendas observadas',
                         showlegend=False,
                         line={'color': '#045dd1'}))
-
+    '''
     fig.add_trace(go.Scatter(x=filtered_data[:size_train].index, y=filtered_data[product][:size_train],
                         mode='lines',
                         name='Vendas observadas',
                         line={'color': '#045dd1'}))
                         
-    fig.add_trace(go.Scatter(x=forecast[size_train:].index, y=forecast['yhat'][size_train:],
+    fig.add_trace(go.Scatter(x=forecast_dict[freq][0].index, y=forecast_dict[freq][0][product],
                         mode='lines',
                         name='Vendas projetadas',
                         line={'color': '#d10b04'}))
 
-    fig.add_trace(go.Scatter(x=forecast[size_train:].index, y=forecast['yhat_lower'][size_train:],
+    fig.add_trace(go.Scatter(x=forecast_dict[freq][0].index, y=forecast_dict[freq][1][product],
                         #mode='none',
                         name='Limite inferior',
                         showlegend=False,
                         line_color='rgba(192, 43, 29, 0.2)'))
                         
-    fig.add_trace(go.Scatter(x=forecast[size_train:].index, y=forecast['yhat_upper'][size_train:],
+    fig.add_trace(go.Scatter(x=forecast_dict[freq][0].index, y=forecast_dict[freq][2][product],
                         #mode='none',
                         fill='tonexty',
                         fillcolor='rgba(192, 43, 29, 0.2)',
@@ -140,7 +99,7 @@ def get_forecast_figure(filtered_data, product, split_date, freq='D'):
                   x0=split_date,
                   y0=0,
                   x1=split_date,
-                  y1=999,
+                  y1=max(filtered_data[product] * 1.1),
                   line={'color': '#c4c7cc'})
                   
     fig.layout.xaxis.linecolor='rgba(0, 0, 0, 1)'
@@ -149,7 +108,8 @@ def get_forecast_figure(filtered_data, product, split_date, freq='D'):
     fig.layout.plot_bgcolor='rgba(255, 255, 255, 1)'
     fig.update_layout(legend=legend)
             
-    return fig, forecast
+    #return fig, forecast
+    return fig, None
     
 def get_sales_figure(filtered_data, product):
     # Criar uma figura com eixos secundários
