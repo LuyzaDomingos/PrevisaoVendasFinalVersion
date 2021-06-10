@@ -1,4 +1,4 @@
-# Aplicativo 1 (ambiente de testes/tunagem)
+# Aplicativo 1 (Previsão por produtos)
 import json
 import pandas as pd
 
@@ -53,7 +53,7 @@ layout = html.Div(
         html.Div(
             children=[
                 html.P(children="📈", className="header-emoji"),
-                html.H1(children="Previsão de Vendas", className="header-title"),
+                html.H1(children="Previsão por Produtos", className="header-title"),
                 html.P(children="Visualização e previsão de séries temporais referentes à vendas de produtos", className="header-description"),
                 dcc.Link('Voltar à página inicial', href='index', className='link'),
                 #html.Button("Baixe a previsão (.csv)", id="bt-download", className="bt"),

@@ -286,12 +286,21 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
 
         if sales_panel is False:
             child.append(html.Div(children=[
-                dcc.Link("    " + category, href='index', className='link white-bg'),
+                dcc.Link("    " + category, href=category.replace(' ', '_'), className='link white-bg'),
                 html.Div(children=[
                     html.Img(src=app.get_asset_url('categorias/' + category + '.png')),
                     dcc.Graph(id="sales-chart-period-" + category, config={"displayModeBar": False}, figure=fig),
-                    html.Img(src=app.get_asset_url('graficos.png'), className='yellow-bg'),
-                    html.Img(src=app.get_asset_url('relatorio.png'), className='yellow-bg')],
+                    #html.Img(src=app.get_asset_url('graficos.png'), className='yellow-bg'),
+                    html.A(
+                        children=[
+                            html.Img(src=app.get_asset_url('graficos.png'), className='yellow-bg'),
+                        ], href=category.replace(' ', '_'), style = {'width':'60px', 'height':'60px', 'margin-right': '16px'}
+                    ),
+                    html.A(
+                        children=[
+                            html.Img(src=app.get_asset_url('relatorio.png'), className='yellow-bg'),
+                        ], href=' ', style = {'width':'60px', 'height':'60px', 'margin-right': '16px'}
+                    )],
                     className='class-header')
                 ], className="card small-margin"))
         else:
