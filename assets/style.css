@@ -244,18 +244,23 @@ img {
 }
 
 .column {
+    width: 200px;
+    height: 150px;
     padding-top: 25px;
     padding: 10px;
-    float: left;
+    float: center;
     margin-right: 50px;
+    text-align: center;
+    display: block;
+    background-color: white;
 }
 
 .secondlink {
     border: none;
-    color: #f7c700;
+    /*color: #f7c700;*/
+    color: black;
     font-size: 14px;
-    text-decoration: underline;
     text-decoration-color: black;
+    text-align: center;
     font-weight: bold;
-
 }
