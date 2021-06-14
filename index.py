@@ -27,13 +27,13 @@ index_page = html.Div(children =[
         html.A(
             children=[
                 html.Img(src=app.get_asset_url('serie.png'), style = {'width':'100px', 'height':'100px'}),
-                html.P("Previsão por Produtos",className='secondlink'),
+                html.P("Previsão por Produtos", className='secondlink'),
             ],href='/apps/app1',className="column",
         ),
         html.A(
             children=[
                 html.Img(src=app.get_asset_url('previsao.png'), style = {'width':'100px', 'height':'100px'}),
-                html.P("Previsão por Categoria",className='secondlink'),
+                html.P("Previsão por Categoria", className='secondlink'),
             ],href='/apps/app2',className="column",
         ),
         #html.A(
@@ -45,8 +45,8 @@ index_page = html.Div(children =[
         html.A(
             children=[
                 html.Img(src=app.get_asset_url('venda.png'), style = {'width':'100px', 'height':'100px'}),
-                html.P("Painel de Vendas",className='secondlink', style = {'color': 'gray'})
-            ], href='',className="column", #href='/apps/app4',className="column",
+                html.P("Painel de Vendas", className='secondlink') # style = {'color': 'gray'}
+            ], href='/apps/app4',className="column",
         ),
         ], style = {'width':'100%', 'height':'100%','display':'flex', 'justify-content': 'space-evenly', 'padding-top': '50px'}),
     

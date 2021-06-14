@@ -111,19 +111,31 @@ def get_forecast_figure(filtered_data, product, split_date, freq='D'):
     #return fig, forecast
     return fig, None
     
-def get_sales_figure(filtered_data, product):
-    # Criar uma figura com eixos secundários
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
-    fig.update_layout(title_text="Vendas observadas", xaxis_range=['2018-01-01', '2021-03-12'])
-    fig.update_layout(legend=legend)
-        
+def get_sales_figure(filtered_data, product, sales_panel=False, highlight=None):
+    # Criar uma figura com eixos secundários, caso não seja para o painel de vendas
+    if sales_panel is False:
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
+    else:
+        fig = go.Figure()
+        fig.update_layout(margin=dict(r=24, b=40))
+    fig.update_layout(title_text="Vendas observadas", xaxis_range=['2018-01-01', '2021-03-12'], legend=legend, height=426)
     # Adicionar as linhas
-    fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product].cumsum(), name="Vendas acumuladas", line={'color': '#045dd1'}), secondary_y=False)
-    fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product], name="Vendas no período", line={'color': 'rgba(101, 156, 0, 0.8)'}), secondary_y=True)
+    if sales_panel is True:
+        if highlight is None:
+            fig.add_trace(go.Bar(x=filtered_data.index, y=filtered_data[product], name="Vendas acumuladas", marker_color='#045dd1'))
+        else:
+            colors = ['#045dd1', ] * len(filtered_data)
+            colors[highlight] = 'crimson'
+            fig.add_trace(go.Bar(x=filtered_data.index, y=filtered_data[product], name="Vendas acumuladas", marker_color=colors))
 
-    # Nome dos eixos
-    fig.update_yaxes(title_text="Vendas acumuladas", secondary_y=False)
-    fig.update_yaxes(title_text="Vendas no período", secondary_y=True)
+        # Nome do eixo
+        fig.update_yaxes(title_text="Vendas no período")
+    else:
+        fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product].cumsum(), name="Vendas acumuladas", line={'color': '#045dd1'}), secondary_y=False)
+        fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product], name="Vendas no período", line={'color': 'rgba(101, 156, 0, 0.8)'}), secondary_y=True)
+        # Nome dos eixos
+        fig.update_yaxes(title_text="Vendas no período", secondary_y=True)
+        fig.update_yaxes(title_text="Vendas acumuladas", secondary_y=False)
 
     # Linha y = 0
     fig.add_shape(type='line', x0='2018-01-01', y0=0, x1='2021-03-12', y1=0, line={'color': 'rgba(0, 0, 0, 1)'})
@@ -314,23 +326,50 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
 
     return child
 
-def get_top_list(data, category_products, month=3, year=2021, top=5):
+def get_previous(year, month):
+    if month > 1:
+        previous_month = month - 1
+        previous_year = year
+    elif year > 2018:
+        previous_month = 12
+        previous_year = year - 1
+    else:
+        previous_month = month
+        previous_year = year
+
+    return previous_year, previous_month
+
+def get_top_list(data, category_products, month=3, year=2021, top=5, sales_panel=False, ascending=False):
     filtered_data = data[category_products]
     filtered_data.index = pd.to_datetime(filtered_data.index)
     filtered_data = filtered_data.loc[(data.index.month == month) & (data.index.year == year)]
 
     num = top
     if(len(category_products) < num): # Em algumas categorias o número de produtos pertencentes é menor que 5
-        top_series = filtered_data.sum().sort_values(ascending=False)
+        top_series = filtered_data.sum().sort_values(ascending=ascending)
         num = len(category_products)
     else:
-        top_series = filtered_data.sum().sort_values(ascending=False)[:num]
+        top_series = filtered_data.sum().sort_values(ascending=ascending)[:num]
         
+    if sales_panel is True:
+        top_df = pd.DataFrame({'Produto': top_series.index, 'Qtd. vendida': top_series.values}, index=range(1, num+1))
+
+        previous_year, previous_month = get_previous(year, month)
+        prev_sales = data.loc[(data.index.month == previous_month) & (data.index.year == previous_year), top_df['Produto'].unique()].sum().values
+
+        top_df['Variação'] = (top_df['Qtd. vendida']- prev_sales) / prev_sales * 100
+        top_df.fillna(value=0, inplace=True)
+        top_df['Variação'] = top_df['Variação'].apply(lambda x : "{:3.2f}%".format(x))
+        top_df['Qtd. vendida'] = top_df['Qtd. vendida'].apply(lambda x : "{:5d}".format(x))
+        top_df['Produto'] = top_df['Produto'].apply(lambda x : x if len(x) < 30 else '{}...'.format(x[:30]))
+        #top_df['Valor'] = '0'
+        return top_df
+
     return  pd.DataFrame({'Produto': top_series.index, 'Qtd. vendida': top_series.values}, index=range(1, num+1))
     
-def draw_top_list(data, category_products, month=3, year=2021, top=5):
-    top_df = get_top_list(data, category_products, month, year, top)
-    
+def draw_top_list(data, category_products, month=3, year=2021, top=5, sales_panel=False, ascending=False):
+    top_df = get_top_list(data, category_products, month, year, top, sales_panel, ascending)
+
     return DataTable(id='top-table',
                     columns=[{'name': column, 'id': column} for column in top_df.columns],
                     data=top_df.to_dict('records'),
@@ -356,3 +395,39 @@ def draw_top_list(data, category_products, month=3, year=2021, top=5):
                         'backgroundColor': 'rgb(248, 248, 248)'
                     }])
     
+def get_general_panel(data, month=3, year=2021, category='GERAL', products=None):
+    previous_year, previous_month = get_previous(year, month)
+
+    fig = go.Figure()
+    grid = {'rows': 2, 'columns': 1, 'pattern': "independent"}
+    fig.update_layout(grid=grid, height=372, width=400, margin=dict(l=40, r=40, t=20, b=0))
+    # Produtos vendidos no mês
+    fig.add_trace(go.Indicator(
+        mode = "number+delta",
+        value = data.loc[(data.index.month == month) & (data.index.year == year), category][0],
+        title = {"text": 'Produtos vendidos no mês'},
+        delta = {'reference': data.loc[(data.index.month == previous_month) & (data.index.year == previous_year), category][0], 'relative': True, 'position': 'right'},
+        domain = {'row': 0, 'column': 0}))
+    # Produtos vendidos em média
+    fig.add_trace(go.Indicator(
+        mode = "number+delta",
+        value = 0,
+        title = {"text": 'Produtos vendidos em média'},
+        delta = {'reference': 0, 'relative': True, 'position': 'right'},
+        domain = {'row': 1, 'column': 0}))
+
+    highlight_index = (month - 1) + 12 * (year - 2018)
+
+    return [html.Div(children=[
+                    html.Div(children=dcc.Graph(id="sales-panel-chart", config={"displayModeBar": False}, figure=get_sales_figure(data, category, True, highlight_index)), 
+                        className='right', 
+                        style={'border-left-width': '24px', 'border-top-width': '0'}),
+                    html.Div(children=dcc.Graph(id="sales-panel-indicators", config={"displayModeBar": False}, figure=fig), 
+                        className='left', 
+                        style={'display': 'flex', 'justify-content': 'center', 'align-items': 'center', 'border-top-width': '0'})],
+                    style={'background-color': 'white', 'width': '100%', 'height': '450px'}),
+            # Lista de mais vendidos e menos vendidos
+            html.Div(children=[
+                    html.Div(children=[html.P('Mais vendidos', className='header-description'), draw_top_list(data, products, sales_panel=True, month=month, year=year)], className='left', style={'background-color': 'white', 'width': '50%', 'border-top-width': '0'}),
+                    html.Div(children=[html.P('Menos vendidos', className='header-description'), draw_top_list(data, products, sales_panel=True, ascending=True, month=month, year=year)], className='right', style={'background-color': 'white', 'width': '50%', 'border-left-width': '24px', 'border-top-width': '0'})],
+                    style={'background-color': 'white', 'width': '100%', 'height': '343px'})]

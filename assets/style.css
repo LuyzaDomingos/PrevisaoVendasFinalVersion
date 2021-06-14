@@ -70,6 +70,14 @@ body {
 
 .dropdown {
     font-size: 14px;
+    max-width: 300px;
+    height: 60px;
+}
+
+.dash-dropdown {
+    min-width: 300px;
+    min-height: 60px;
+    height: 60px;
 }
 
 .Select-control {

@@ -22,15 +22,9 @@ data_d.fillna(value=0, inplace=True)
 data_d.index = pd.to_datetime(data_d.index)
 data_d = data_d[:'2021-03-12']
 # Amostragem semanal
-data_w = pd.read_csv("previsao/WGeral.csv", index_col=0)
-data_w.fillna(value=0, inplace=True)
-data_w.index = pd.to_datetime(data_w.index)
-data_w = data_w[:'2021-03-12']
+data_w = data_d.resample('W-MON').sum()
 # Amostragem mensal
-data_m = pd.read_csv("previsao/MonGeral.csv", index_col=0)
-data_m.fillna(value=0, inplace=True)
-data_m.index = pd.to_datetime(data_m.index)
-data_m = data_m[:'2021-03-12']
+data_m = data_d.resample('M').sum()
 # Dicionário de categorias
 categories_dict = json.load(open('previsao/subcategorias.json'))
 # Dicionário de frequências
