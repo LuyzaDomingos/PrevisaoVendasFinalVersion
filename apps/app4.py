@@ -36,7 +36,7 @@ categories = list(json.load(open('previsao/subcategorias.json')).keys())
 categories.insert(0, 'GERAL')
 
 layout = html.Div(children=[
-    dcc.Store(id='bt-memory', storage_type='memory', data='none'),
+    dcc.Store(id='bt-memory', storage_type='memory', data='bt-geral'),
     html.Div(children=[
                 html.Br(),
                 html.H1(children="Painel de Vendas", className="header-title"),
@@ -77,7 +77,7 @@ layout = html.Div(children=[
                     ]
                 ),
             ],
-            className="menu",
+            className="menu", style={'height': '90px', 'padding-top': '12px'}
         ),
         html.Div(
             id="items-list",
@@ -98,7 +98,7 @@ def set_active(*args):
     ctx = callback_context
     
     if not ctx.triggered or not any(args):
-        return ['flex-item' for _ in range(3)]
+        return ['flex-item' if x > 0 else 'flex-item selected' for x in range(3)]
         
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
@@ -114,11 +114,6 @@ def set_active(*args):
 @app.callback([Output('items-list', 'children'), Output('items-list', 'style'), Output('bt-memory', 'data')],
             [Input('bt-geral', 'n_clicks'), Input('bt-store', 'n_clicks'), Input('bt-region', 'n_clicks'), Input("category-selector", "value"), Input("month-selector", "value"), Input('bt-memory', 'data')])
 def update_list(*args):
-    ctx = callback_context
-    if not ctx.triggered or not any(args):
-        return ['flex-item' for _ in range(3)], no_update, no_update
-    # Obter o id do botão selecionado (ou não, caso não tenha sido um que disparou o callback)    
-    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
     # Obter o mês e ano da entrada
     split = args[4].split('/')
     year = int(split[1])
@@ -128,7 +123,17 @@ def update_list(*args):
         products = categories[1:]
     else:
         products = app1.categories_dict[args[3]]
+    # Definir se o callback foi ativado por um botão
+    ctx = callback_context
+    if not ctx.triggered or not any(args): # Caso entre aqui é por ter sido o startup do aplicativo
+        #print('aaa')
+        #return ['flex-item' for _ in range(3)], no_update, no_update
+        return get_general_panel(data=app1.data_m, month=month, year=year, category=args[3], products=products), {'max-width': '1320px'}, no_update
 
+    # Obter o id do botão selecionado (ou não, caso não tenha sido um que disparou o callback)    
+    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    if button_id == args[5]: # Foi clicado no mesmo botão
+        return no_update, no_update, no_update
     # Atualizar as saídas
     if button_id == "bt-geral":
         return get_general_panel(data=app1.data_m, month=month, year=year, category=args[3], products=products), {'max-width': '1320px'}, "bt-geral"

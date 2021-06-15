@@ -408,11 +408,11 @@ def get_general_panel(data, month=3, year=2021, category='GERAL', products=None)
         title = {"text": 'Produtos vendidos no mês'},
         delta = {'reference': data.loc[(data.index.month == previous_month) & (data.index.year == previous_year), category][0], 'relative': True, 'position': 'right'},
         domain = {'row': 0, 'column': 0}))
-    # Produtos vendidos em média
+    # Vendas perdidas por ruptura de estoque
     fig.add_trace(go.Indicator(
         mode = "number+delta",
         value = 0,
-        title = {"text": 'Produtos vendidos em média'},
+        title = {"text": 'Vendas perdidas <br> por ruptura de estoque'},
         delta = {'reference': 0, 'relative': True, 'position': 'right'},
         domain = {'row': 1, 'column': 0}))
 
