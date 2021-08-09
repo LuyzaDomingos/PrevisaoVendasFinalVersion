@@ -8,11 +8,11 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 from dash_extensions import Download
 from dash_extensions.snippets import send_data_frame
-from dash import no_update
+from dash import no_update, callback_context
 # API de previsão de séries temporais
 from fbprophet import Prophet
 # Funções de plotagem
-from util import get_forecast_figure, get_sales_figure, get_indicators_figure, heroku
+from util import get_forecast_figure, get_sales_figure, get_indicators_figure, get_stocks_figure, get_sales_loss_figure, heroku
 
 from app import app
 
@@ -42,13 +42,18 @@ external_stylesheets = [
     },
 ]
     
-layout = html.Div(
-    children=[
+layout = html.Div(children=[
+        dcc.Store(id='bt-memory-pred', storage_type='memory', data='bt-sales'),
         html.Div(
             children=[
-                html.P(children="📈", className="header-emoji"),
+                #html.P(children="📈", className="header-emoji"),
+                html.Br(),
                 html.H1(children="Previsão por Produtos", className="header-title"),
-                html.P(children="Visualização e previsão de séries temporais referentes à vendas de produtos", className="header-description"),
+                html.P(children="Visualização e previsão de séries temporais referentes à vendas e estoques de produtos", className="header-description"),
+                html.Div([
+                html.Button('Vendas', id='bt-sales', n_clicks=0, className='flex-item'),
+                html.Button('Estoque', id='bt-stock', n_clicks=0, className='flex-item'),
+                ], className="flex-container center"),
                 dcc.Link('Voltar à página inicial', href='index', className='link'),
                 #html.Button("Baixe a previsão (.csv)", id="bt-download", className="bt"),
                 #Download(id="download"),
@@ -63,7 +68,7 @@ layout = html.Div(
                         dcc.Dropdown(
                             id="category-filter",
                             options=[{"label": key, "value": key} for key in list(categories_dict.keys())],
-                            value="ELETRO INFORMATICA",
+                            value="AUDIO E SOM",
                             clearable=False,
                             className="dropdown",
                         ),
@@ -76,9 +81,9 @@ layout = html.Div(
                             id="product-filter",
                             options=[
                                 {"label": product, "value": product}
-                                for product in categories_dict["ELETRO INFORMATICA"]
+                                for product in categories_dict["AUDIO E SOM"]
                             ],
-                            value="TABLET NB316 M7S 16GB QUAD CORE PRETO",
+                            value="RADIO RECEPTOR 2 FXS RM PFT22AC",
                             clearable=False,
                             className="dropdown",
                         ),
@@ -159,6 +164,29 @@ def download_forecast(n_clicks, product, frequency):
         return html.Div("Um erro ocorreu ao tentar obter a previsão!")
 '''
 
+# Callback de mostrar o botão atualmente selecionado
+buttons = ['bt-sales', 'bt-stock']
+@app.callback([Output('bt-sales', 'className'),
+              Output('bt-stock', 'className')],
+              [Input('bt-sales', 'n_clicks'),
+              Input('bt-stock', 'n_clicks')])
+def set_active(*args):
+    ctx = callback_context
+    
+    if not ctx.triggered or not any(args):
+        return ['flex-item' if x > 0 else 'flex-item selected' for x in range(2)]
+        
+    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    styles = []
+    for button in buttons:
+        if(button == button_id):
+            styles.append('flex-item selected')
+        else:
+            styles.append('flex-item')
+            
+    return styles
+
 # Callback da seleção de categoria
 @app.callback(
     [Output("product-filter", "options"), Output("product-filter", "value")],
@@ -171,33 +199,47 @@ def update_products(category):
 @app.callback(
 # Lembrete: Se tiver mais de uma chamada de Output(...) colocar em uma lista as multiplas chamadas
     #[Output("sales-chart-cumsum", "figure"), Output("sales-chart-period", "figure"), Output("forecast-chart", "figure")],
-    [Output("sales-chart-period", "figure"), Output("forecast-chart", "figure")], # Output("indicators-chart", "figure")
-    [Input("product-filter", "value"), Input("frequency-selector", "value"), Input("date-range", "start_date"), Input("date-range", "end_date")]
+    [Output("sales-chart-period", "figure"), Output("forecast-chart", "figure"), Output("bt-memory-pred", "data")], # Output("indicators-chart", "figure")
+    [Input("product-filter", "value"), Input("frequency-selector", "value"), Input("date-range", "start_date"), Input("date-range", "end_date"), Input('bt-sales', 'n_clicks'), Input('bt-stock', 'n_clicks'), Input('bt-memory-pred', 'data')]
 )
-def update_charts(product, frequency, start_date, end_date):
+def update_charts(product, frequency, start_date, end_date, bt_sales_nclicks, bt_stock_nclicks, memory):
+    # Reorganizar os dados segundo a frequência selecionada
     if frequency == 'D':
         mask = (
-        (data_d.index >= start_date)
-        & (data_d.index <= end_date)
-        )
+            (data_d.index >= start_date)
+            & (data_d.index <= end_date)
+            )
         filtered_data = data_d.loc[mask, :]
     elif frequency == 'W-MON':
         mask = (
-        (data_w.index >= start_date)
-        & (data_w.index <= end_date)
-        )
+            (data_w.index >= start_date)
+            & (data_w.index <= end_date)
+            )
         filtered_data = data_w.loc[mask, :]
     else: # frequency == 'M'
         mask = (
-        (data_m.index >= start_date)
-        & (data_m.index <= end_date)
-        )
+            (data_m.index >= start_date)
+            & (data_m.index <= end_date)
+            )
         filtered_data = data_m.loc[mask, :]
-        
+            
     filtered_data = filtered_data.resample(frequency).sum()
-    
-    sales_period_chart_figure = get_sales_figure(filtered_data, product)
-    forecast_chart_figure, forecast = get_forecast_figure(filtered_data, product, '2021-03-16', frequency) 
-    #indicators_chart_figure = get_indicators_figure(filtered_data, forecast, product, '2021-03-16')
-
-    return sales_period_chart_figure, forecast_chart_figure#, indicators_chart_figure
+    # Obter o id do botão selecionado (ou não, caso não tenha sido um que disparou o callback)
+    ctx = callback_context
+    if not ctx.triggered or not any([bt_sales_nclicks, bt_stock_nclicks]): # Caso entre aqui é por ter sido o startup do aplicativo
+        print('no')
+        return get_sales_figure(filtered_data, product), get_forecast_figure(filtered_data, product, '2021-03-16', frequency), no_update
+            
+    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    # Mostrar o tipo de gráfico selecionado
+    if button_id == 'bt-sales': # O botão selecionado é o de vendas
+        return get_sales_figure(filtered_data, product), get_forecast_figure(filtered_data, product, '2021-03-16', frequency), 'bt-sales'
+    elif button_id == 'bt-stock': # O botão selecionado é o de estoque
+        return get_stocks_figure(filtered_data, product), get_sales_loss_figure(filtered_data, product, frequency), 'bt-stock'
+    else: # O callback não foi gerado por um botão
+        if memory == 'bt-sales':
+            return get_sales_figure(filtered_data, product), get_forecast_figure(filtered_data, product, '2021-03-16', frequency), no_update
+        elif memory == 'bt-stock':
+            return get_stocks_figure(filtered_data, product), get_sales_loss_figure(filtered_data, product, frequency), no_update
+        else:
+            return no_update, no_update, no_update

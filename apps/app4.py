@@ -126,7 +126,6 @@ def update_list(*args):
     # Definir se o callback foi ativado por um botão
     ctx = callback_context
     if not ctx.triggered or not any(args): # Caso entre aqui é por ter sido o startup do aplicativo
-        #print('aaa')
         #return ['flex-item' for _ in range(3)], no_update, no_update
         return get_general_panel(data=app1.data_m, month=month, year=year, category=args[3], products=products), {'max-width': '1320px'}, no_update
 

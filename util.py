@@ -1,6 +1,7 @@
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
+import numpy as np
 from plotly.subplots import make_subplots
 from fbprophet import Prophet
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -108,8 +109,7 @@ def get_forecast_figure(filtered_data, product, split_date, freq='D'):
     fig.layout.plot_bgcolor='rgba(255, 255, 255, 1)'
     fig.update_layout(legend=legend)
             
-    #return fig, forecast
-    return fig, None
+    return fig
     
 def get_sales_figure(filtered_data, product, sales_panel=False, highlight=None):
     # Criar uma figura com eixos secundários, caso não seja para o painel de vendas
@@ -136,6 +136,45 @@ def get_sales_figure(filtered_data, product, sales_panel=False, highlight=None):
         # Nome dos eixos
         fig.update_yaxes(title_text="Vendas no período", secondary_y=True)
         fig.update_yaxes(title_text="Vendas acumuladas", secondary_y=False)
+
+    # Linha y = 0
+    fig.add_shape(type='line', x0='2018-01-01', y0=0, x1='2021-03-12', y1=0, line={'color': 'rgba(0, 0, 0, 1)'})
+    # Cores do gráfico
+    fig.layout.xaxis.gridcolor='rgba(189, 189, 189, 0.5)'
+    fig.layout.yaxis.gridcolor='rgba(189, 189, 189, 0.5)'
+    fig.layout.plot_bgcolor='rgba(255, 255, 255, 1)'
+    
+    return fig
+
+def get_stocks_figure(filtered_data, product):
+    fig = make_subplots(specs=[[{"secondary_y": False}]])
+    
+    fig.update_layout(title_text="Estoque observado", xaxis_range=['2018-01-01', '2021-03-12'], legend=legend, height=426)
+    # Adicionar a linha de estoque
+    fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product], name="Estoque no período", line={'color': '#045dd1'}))
+    # Nome dos eixos
+    fig.update_yaxes(title_text="Estoque no período")
+    # Linha y = 0
+    fig.add_shape(type='line', x0='2018-01-01', y0=0, x1='2021-03-12', y1=0, line={'color': 'rgba(0, 0, 0, 1)'})
+    # Cores do gráfico
+    fig.layout.xaxis.gridcolor='rgba(189, 189, 189, 0.5)'
+    fig.layout.yaxis.gridcolor='rgba(189, 189, 189, 0.5)'
+    fig.layout.plot_bgcolor='rgba(255, 255, 255, 1)'
+    
+    return fig
+
+def get_sales_loss_figure(filtered_data, product, freq='D'):
+    forecast = [abs(np.random.randint(0, 10)) if i == 0 else 0 for i in filtered_data[product].values]
+    # Criar uma figura com eixos secundários
+    fig = make_subplots(specs=[[{"secondary_y": False}]])
+    
+    fig.update_layout(title_text="Impacto nas vendas", xaxis_range=['2018-01-01', '2021-03-12'], legend=legend, height=426)
+    # Adicionar as linhas
+    fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product], name="Vendas no período", line={'color': '#045dd1'}))
+    fig.add_trace(go.Scatter(x=filtered_data.index, y=forecast, name="Vendas perdidas", line={'color': '#d10b04'}))
+    # Nome dos eixos
+    fig.update_yaxes(title_text="Quantidade de vendas")
+    #fig.update_yaxes(title_text="Vendas acumuladas", secondary_y=False)
 
     # Linha y = 0
     fig.add_shape(type='line', x0='2018-01-01', y0=0, x1='2021-03-12', y1=0, line={'color': 'rgba(0, 0, 0, 1)'})
@@ -224,10 +263,10 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
         # Soma de todos os valores
         fig.add_trace(go.Indicator(
             mode = "number+delta",
-            value = filtered_facts['Valor venda'].sum(),
+            value = 0,
             title = {"text": titles[1]},
             number = {'prefix': "R$"},
-            delta = {'reference': filtered_facts['Valor anterior'].sum(), 'relative': True, 'position': 'right'},
+            delta = {'reference': 0, 'relative': True, 'position': 'right'},
             domain = {'row': 0, 'column': 1}))
             
     grid = {'rows': 1, 'columns': n_cols, 'pattern': "independent"}
@@ -288,10 +327,10 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
             # Indicador de valor
             fig.add_trace(go.Indicator(
                 mode = "number+delta",
-                value = randint(0, 999999),
+                value = 0,
                 title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
                 number = {'prefix': "R$", "font":{"size":42}},
-                delta = {'reference': randint(0, 999999), 'relative': True, 'position': 'right'},
+                delta = {'reference': 0, 'relative': True, 'position': 'right'},
                 domain = {'row': 0, 'column': 1}))
                 
         fig.update_layout(grid=grid, template=template)
