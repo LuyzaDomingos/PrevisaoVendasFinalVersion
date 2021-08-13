@@ -163,7 +163,7 @@ def get_stocks_figure(filtered_data, product):
     
     return fig
 
-def get_sales_loss_figure(filtered_data, product, freq='D'):
+def get_sales_loss_figure(filtered_data_stock, filtered_data, product, freq='D'):
     forecast = [abs(np.random.randint(0, 10)) if i == 0 else 0 for i in filtered_data[product].values]
     # Criar uma figura com eixos secundários
     fig = make_subplots(specs=[[{"secondary_y": False}]])

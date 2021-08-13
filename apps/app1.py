@@ -25,6 +25,10 @@ data_d = data_d[:'2021-03-12']
 data_w = data_d.resample('W-MON').sum()
 # Amostragem mensal
 data_m = data_d.resample('M').sum()
+# Dados de estoque
+data_stock = pd.read_csv("previsao/estoque.csv", index_col=0)
+data_stock.index = pd.to_datetime(data_stock.index)
+data_stock = data_stock[:'2021-03-12']
 # Dicionário de categorias
 categories_dict = json.load(open('previsao/subcategorias.json'))
 # Dicionário de frequências
@@ -227,7 +231,6 @@ def update_charts(product, frequency, start_date, end_date, bt_sales_nclicks, bt
     # Obter o id do botão selecionado (ou não, caso não tenha sido um que disparou o callback)
     ctx = callback_context
     if not ctx.triggered or not any([bt_sales_nclicks, bt_stock_nclicks]): # Caso entre aqui é por ter sido o startup do aplicativo
-        print('no')
         return get_sales_figure(filtered_data, product), get_forecast_figure(filtered_data, product, '2021-03-16', frequency), no_update
             
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
@@ -235,11 +238,25 @@ def update_charts(product, frequency, start_date, end_date, bt_sales_nclicks, bt
     if button_id == 'bt-sales': # O botão selecionado é o de vendas
         return get_sales_figure(filtered_data, product), get_forecast_figure(filtered_data, product, '2021-03-16', frequency), 'bt-sales'
     elif button_id == 'bt-stock': # O botão selecionado é o de estoque
-        return get_stocks_figure(filtered_data, product), get_sales_loss_figure(filtered_data, product, frequency), 'bt-stock'
+        mask = (
+                (data_stock.index >= start_date)
+                & (data_stock.index <= end_date)
+                )
+        filtered_data_stock = data_stock.loc[mask, :]
+
+        filtered_data_stock = filtered_data_stock.resample(frequency).sum()
+        return get_stocks_figure(filtered_data_stock, product), get_sales_loss_figure(filtered_data_stock, filtered_data, product, frequency), 'bt-stock'
     else: # O callback não foi gerado por um botão
         if memory == 'bt-sales':
             return get_sales_figure(filtered_data, product), get_forecast_figure(filtered_data, product, '2021-03-16', frequency), no_update
         elif memory == 'bt-stock':
-            return get_stocks_figure(filtered_data, product), get_sales_loss_figure(filtered_data, product, frequency), no_update
+            mask = (
+                (data_stock.index >= start_date)
+                & (data_stock.index <= end_date)
+                )
+            filtered_data_stock = data_stock.loc[mask, :]
+
+            filtered_data_stock = filtered_data_stock.resample(frequency).sum()
+            return get_stocks_figure(filtered_data_stock, product), get_sales_loss_figure(filtered_data_stock, filtered_data, product, frequency), no_update
         else:
             return no_update, no_update, no_update
