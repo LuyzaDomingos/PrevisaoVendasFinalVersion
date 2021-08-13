@@ -244,8 +244,7 @@ def update_charts(product, frequency, start_date, end_date, bt_sales_nclicks, bt
                 )
         filtered_data_stock = data_stock.loc[mask, :]
 
-        filtered_data_stock = filtered_data_stock.resample(frequency).sum()
-        return get_stocks_figure(filtered_data_stock, product), get_sales_loss_figure(filtered_data_stock, filtered_data, product, frequency), 'bt-stock'
+        return get_stocks_figure(filtered_data_stock, product, frequency), get_sales_loss_figure(filtered_data_stock, filtered_data, product, frequency), 'bt-stock'
     else: # O callback não foi gerado por um botão
         if memory == 'bt-sales':
             return get_sales_figure(filtered_data, product), get_forecast_figure(filtered_data, product, '2021-03-16', frequency), no_update
@@ -256,7 +255,6 @@ def update_charts(product, frequency, start_date, end_date, bt_sales_nclicks, bt
                 )
             filtered_data_stock = data_stock.loc[mask, :]
 
-            filtered_data_stock = filtered_data_stock.resample(frequency).sum()
-            return get_stocks_figure(filtered_data_stock, product), get_sales_loss_figure(filtered_data_stock, filtered_data, product, frequency), no_update
+            return get_stocks_figure(filtered_data_stock, product, frequency), get_sales_loss_figure(filtered_data_stock, filtered_data, product, frequency), no_update
         else:
             return no_update, no_update, no_update

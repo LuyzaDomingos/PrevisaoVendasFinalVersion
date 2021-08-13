@@ -146,7 +146,9 @@ def get_sales_figure(filtered_data, product, sales_panel=False, highlight=None):
     
     return fig
 
-def get_stocks_figure(filtered_data, product):
+def get_stocks_figure(filtered_data, product, freq='D'):
+    filtered_data = filtered_data.resample(freq).sum()
+
     fig = make_subplots(specs=[[{"secondary_y": False}]])
     
     fig.update_layout(title_text="Estoque observado", xaxis_range=['2018-01-01', '2021-03-12'], legend=legend, height=426)
@@ -163,15 +165,18 @@ def get_stocks_figure(filtered_data, product):
     
     return fig
 
-def get_sales_loss_figure(filtered_data_stock, filtered_data, product, freq='D'):
-    forecast = [abs(np.random.randint(0, 10)) if i == 0 else 0 for i in filtered_data[product].values]
+def get_sales_loss_figure(filtered_data_stock, filtered_data, product, freq='D', window=7):
+    filtered_data['moving_average'] = filtered_data[product].rolling(window=window).mean().fillna(0) # Gerar média móvel
+    filtered_data.loc[:'2019-01-01', 'moving_average'] = 0 # Não temos dados de estoque de 2019 para trás
+    filtered_data['loss'] = [np.round(average) if stock == 0 else 0 for (stock, average) in zip(filtered_data_stock[product], filtered_data['moving_average'])]
+    filtered_data = filtered_data.resample(freq).sum()
     # Criar uma figura com eixos secundários
     fig = make_subplots(specs=[[{"secondary_y": False}]])
     
     fig.update_layout(title_text="Impacto nas vendas", xaxis_range=['2018-01-01', '2021-03-12'], legend=legend, height=426)
     # Adicionar as linhas
     fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product], name="Vendas no período", line={'color': '#045dd1'}))
-    fig.add_trace(go.Scatter(x=filtered_data.index, y=forecast, name="Vendas perdidas", line={'color': '#d10b04'}))
+    fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data['loss'], name="Vendas perdidas", line={'color': '#d10b04'}))
     # Nome dos eixos
     fig.update_yaxes(title_text="Quantidade de vendas")
     #fig.update_yaxes(title_text="Vendas acumuladas", secondary_y=False)
