@@ -225,7 +225,8 @@ def get_indicators_figure(filtered_data, forecast, product, split_date):
 
     return fig
 
-def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=2021, sales_panel=False, items=None):
+def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=2021, sales_panel=False, items=None, sales_data=None,  sales_panel_category=None):
+    previous_year, previous_month = get_previous(year, month)
     filtered_facts = facts.loc[(facts['Mes'] == month) & (facts['Ano'] == year)]
     filtered_facts = filtered_facts.sort_values(by=sort_by, ascending=ascending)
     child = []
@@ -320,14 +321,14 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
                 number = {'prefix': "R$", "font":{"size":32}},
                 delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Valor anterior'].values[0], 'relative': True, 'position': 'right'},
                 domain = {'row': 0, 'column': 2}))
-        else:
+        else: # sales_panel is True
             # Indicador de vendas
             fig.add_trace(go.Indicator(
                 mode = "number+delta",
-                value = randint(0, 999),
+                value = sales_data[(sales_data.index.month == month) & (sales_data.index.year == year)][category + "|" + sales_panel_category][0],
                 title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
                 number = {"font":{"size":42}},
-                delta = {'reference': randint(0, 999), 'relative': True, 'position': 'right'},
+                delta = {'reference': sales_data[(sales_data.index.month == previous_month) & (sales_data.index.year == previous_year)][category + "|" + sales_panel_category][0], 'relative': True, 'position': 'right'},
                 domain = {'row': 0, 'column': 0}))
             # Indicador de valor
             fig.add_trace(go.Indicator(
