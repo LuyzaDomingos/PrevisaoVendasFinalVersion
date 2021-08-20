@@ -238,23 +238,37 @@ def update_charts(product, frequency, start_date, end_date, bt_sales_nclicks, bt
     if button_id == 'bt-sales': # O botão selecionado é o de vendas
         return get_sales_figure(filtered_data, product), get_forecast_figure(filtered_data, product, '2021-03-16', frequency), 'bt-sales'
     elif button_id == 'bt-stock': # O botão selecionado é o de estoque
+        #mask = (
+        #    (data_d.index >= start_date)
+        #    & (data_d.index <= end_date)
+        #    )
+        #filtered_data = data_d.loc[mask, :]
+        #filtered_data = filtered_data.resample('M').sum()
+
         mask = (
                 (data_stock.index >= start_date)
                 & (data_stock.index <= end_date)
                 )
         filtered_data_stock = data_stock.loc[mask, :]
 
-        return get_stocks_figure(filtered_data_stock, product, frequency), get_sales_loss_figure(filtered_data_stock, filtered_data, product, frequency), 'bt-stock'
+        return get_stocks_figure(filtered_data_stock, filtered_data, product, frequency), get_sales_loss_figure(filtered_data_stock, filtered_data, product, frequency), 'bt-stock'
     else: # O callback não foi gerado por um botão
         if memory == 'bt-sales':
             return get_sales_figure(filtered_data, product), get_forecast_figure(filtered_data, product, '2021-03-16', frequency), no_update
         elif memory == 'bt-stock':
+            #mask = (
+            #    (data_d.index >= start_date)
+            #    & (data_d.index <= end_date)
+            #    )
+            #filtered_data = data_d.loc[mask, :]
+            #filtered_data = filtered_data.resample('M').sum()
+
             mask = (
                 (data_stock.index >= start_date)
                 & (data_stock.index <= end_date)
                 )
             filtered_data_stock = data_stock.loc[mask, :]
 
-            return get_stocks_figure(filtered_data_stock, product, frequency), get_sales_loss_figure(filtered_data_stock, filtered_data, product, frequency), no_update
+            return get_stocks_figure(filtered_data_stock, filtered_data, product, frequency), get_sales_loss_figure(filtered_data_stock, filtered_data, product, frequency), no_update
         else:
             return no_update, no_update, no_update

@@ -146,18 +146,56 @@ def get_sales_figure(filtered_data, product, sales_panel=False, highlight=None):
     
     return fig
 
-def get_stocks_figure(filtered_data, product, freq='D'):
-    filtered_data = filtered_data.resample(freq).sum()
+def get_stocks_figure(filtered_data, filtered_data_sales, product, freq='D'):
+    # Obter o estoque atual do produto selecionado
+    current_stock = filtered_data[product].iloc[-1]
+    # Obter a média de estoque dos últimos 12 meses
+    average_stock = filtered_data[product].resample('M').mean().astype(int)
+    average_stock = average_stock[-12:].mean()
+    # Reorganizar os dados conforme o período selecionado
+    if freq != 'D':
+        filtered_data = filtered_data.resample(freq).mean().astype(int)
+
+    # Obter a quantidade prevista de vendas no próximo ano
+    future_sales = forecast_dict['D'][0][product].sum()
+    # Obter o giro
+    if average_stock != 0:
+        stock_turnover = future_sales / average_stock
+    else:
+        stock_turnover = 0
+    # Obter a soma cumulativa da previsão do produto selecionado
+    forecast_cumsum = forecast_dict['D'][0][product].cumsum()
+    # Obter a cobertura
+    stock_cover = len(forecast_cumsum[forecast_cumsum < current_stock])
 
     fig = make_subplots(specs=[[{"secondary_y": False}]])
-    
-    fig.update_layout(title_text="Estoque observado", xaxis_range=['2018-01-01', '2021-03-12'], legend=legend, height=426)
+    if freq == 'M':
+        fig.update_layout(title_text="Estoque observado", xaxis_range=['2018-01-01', '2021-03-31'], legend=legend, height=426)
+    else:
+        fig.update_layout(title_text="Estoque observado", xaxis_range=['2018-01-01', '2021-03-12'], legend=legend, height=426)
+
+    # Cobertura
+    fig.add_trace(go.Indicator(
+        mode = "number",
+        value = stock_cover,
+        title = {"text": "<span style='font-size:0.8em;color:gray'>Cobertura</span>", "font":{"size":24}},
+        number = {'suffix': " dias", "font":{"size":32}},
+        domain = {'y': [0, 0.5], 'x': [0, 0.25]}))
+    fig.add_trace(go.Indicator(
+        mode = "number",
+        value = stock_turnover,
+        title = {"text": "<span style='font-size:0.8em;color:gray'>Giro</span>", "font":{"size":24}},
+        number = {'suffix': " p/ ano", "font":{"size":32}, "valueformat": ".1f"},
+        domain = {'y': [0.5, 1], 'x': [0, 0.25]}))
     # Adicionar a linha de estoque
     fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product], name="Estoque no período", line={'color': '#045dd1'}))
     # Nome dos eixos
-    fig.update_yaxes(title_text="Estoque no período")
+    if freq == 'D':
+        fig.update_yaxes(title_text="Estoque no período")
+    else:
+        fig.update_yaxes(title_text="Estoque médio no período")
     # Linha y = 0
-    fig.add_shape(type='line', x0='2018-01-01', y0=0, x1='2021-03-12', y1=0, line={'color': 'rgba(0, 0, 0, 1)'})
+    fig.add_shape(type='line', x0='2018-01-01', y0=0, x1='2021-03-31', y1=0, line={'color': 'rgba(0, 0, 0, 1)'})
     # Cores do gráfico
     fig.layout.xaxis.gridcolor='rgba(189, 189, 189, 0.5)'
     fig.layout.yaxis.gridcolor='rgba(189, 189, 189, 0.5)'
@@ -169,7 +207,8 @@ def get_sales_loss_figure(filtered_data_stock, filtered_data, product, freq='D',
     filtered_data['moving_average'] = filtered_data[product].rolling(window=window).mean().fillna(0) # Gerar média móvel
     filtered_data.loc[:'2019-01-01', 'moving_average'] = 0 # Não temos dados de estoque de 2019 para trás
     filtered_data['loss'] = [np.round(average) if stock == 0 else 0 for (stock, average) in zip(filtered_data_stock[product], filtered_data['moving_average'])]
-    filtered_data = filtered_data.resample(freq).sum()
+    if freq != 'D':
+        filtered_data = filtered_data.resample(freq).mean().astype(int)
     # Criar uma figura com eixos secundários
     fig = make_subplots(specs=[[{"secondary_y": False}]])
     
@@ -237,7 +276,7 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
     titles = ["Vendas no período", "Valor das vendas"]
     n_cols = 2
     if sales_panel is False:
-        titles.insert(1, "Estoque atual")
+        titles.insert(1, "Estoque")
         titles[0] = "Venda prevista"
         n_cols = 3
     
@@ -258,12 +297,19 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
             delta = {'reference': filtered_facts['Estoque anterior'].sum(), 'relative': True, 'position': 'right'},
             domain = {'row': 0, 'column': 1}))
         # Soma de todos os valores
+        #fig.add_trace(go.Indicator(
+        #    mode = "number+delta",
+        #    value = filtered_facts['Valor venda'].sum(),
+        #    title = {"text": titles[2]},
+        #    number = {'prefix': "R$"},
+        #    delta = {'reference': filtered_facts['Valor anterior'].sum(), 'relative': True, 'position': 'bottom'},
+        #    domain = {'row': 0, 'column': 2}))
+        # Cobertura média
         fig.add_trace(go.Indicator(
-            mode = "number+delta",
-            value = filtered_facts['Valor venda'].sum(),
-            title = {"text": titles[2]},
-            number = {'prefix': "R$"},
-            delta = {'reference': filtered_facts['Valor anterior'].sum(), 'relative': True, 'position': 'right'},
+            mode = "number",
+            value = filtered_facts['Cobertura'].median(),
+            title = {"text": "Cobertura"},
+            number = {'suffix': " dias"},
             domain = {'row': 0, 'column': 2}))
     else:
         # Soma de todos os valores
@@ -314,12 +360,19 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
                 delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Estoque anterior'].values[0], 'relative': True, 'position': 'right'},
                 domain = {'row': 0, 'column': 1}))
             # Indicador de valor
+            #fig.add_trace(go.Indicator(
+            #    mode = "number+delta",
+            #    value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Valor venda'].values[0],
+            #    title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
+            #    number = {'prefix': "R$", "font":{"size":32}},
+            #    delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Valor anterior'].values[0], 'relative': True, 'position': 'right'},
+            #    domain = {'row': 0, 'column': 2}))
+            # Indicador de cobertura
             fig.add_trace(go.Indicator(
-                mode = "number+delta",
-                value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Valor venda'].values[0],
+                mode = "number",
+                value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Cobertura'].values[0],
                 title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-                number = {'prefix': "R$", "font":{"size":32}},
-                delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Valor anterior'].values[0], 'relative': True, 'position': 'right'},
+                number = {'suffix': " dias", "font":{"size":32}},
                 domain = {'row': 0, 'column': 2}))
         else: # sales_panel is True
             # Indicador de vendas

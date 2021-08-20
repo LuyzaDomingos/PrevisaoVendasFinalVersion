@@ -28,7 +28,7 @@ layout = html.Div(children=[
     html.Div(children=[
                 html.P(children="📈", className="header-emoji"),
                 html.H1(children="Previsão por Categoria", className="header-title"),
-                html.P(children="Indicadores de previsão de vendas, estoque, valores, e comparação com o mês anterior.", className="header-description"),
+                html.P(children="Indicadores de previsão de vendas, estoque, cobertura, e comparação com o mês anterior.", className="header-description"),
                 dcc.Link('Voltar à página inicial', href='index', className='link'),
             ],
             className="header",
