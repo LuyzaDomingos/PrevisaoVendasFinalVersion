@@ -3,7 +3,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 
 from app import app
-from apps import app1, app2, app3, app4
+from apps import app1, app2, app3, app4, app5
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
@@ -52,7 +52,7 @@ index_page = html.Div(children =[
     
 ])
 
-categories_paths = ['/apps/' + category.replace(' ', '_') for category in ['ELETRO LINHA BRANCA', 'ELETRO TV E SOM',
+categories = ['ELETRO LINHA BRANCA', 'ELETRO TV E SOM',
        'ELETRO TELEFONIA CELULAR', 'ELETRO INFORMATICA', 'MOVEIS COLCHAO',
        'ELETRO PORTATEIS', 'MOVEIS MADEIRA', 'ELETRO UTILIDADE DO LAR',
        'MOVEIS ACO, TUBO E PLASTICO', 'ELETRO BIC.,BRINQ. E CARRO DE',
@@ -64,7 +64,10 @@ categories_paths = ['/apps/' + category.replace(' ', '_') for category in ['ELET
        'CELULAR', 'MÓVEIS', 'AUTOMOTIVO', 'TV E VIDEO',
        'ESPORTE E FITNESS', 'BEBE', 'AR E VENTILAÇÃO', 'RELOGIO', 'GAMES',
        'GAME', '1000', 'ESPORTE E LAZER', 'GARRAFA TERMICA',
-       'ATIVO IMOBILIZADO']]
+       'ATIVO IMOBILIZADO']
+
+categories_paths_3 = ['/apps/app3' + category.replace(' ', '_') for category in categories]
+categories_paths_5 = ['/apps/app5' + category.replace(' ', '_') for category in categories]
 
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
@@ -78,12 +81,14 @@ def display_page(pathname):
     elif pathname == '/apps/app4':
         return app4.layout
     # Pathname usado para dar o panorama da categoria correspondente
-    elif pathname in categories_paths:
-       return app3.get_layout(pathname[6:].replace('_', ' '))
+    elif pathname in categories_paths_3:
+       return app3.get_layout(pathname[10:].replace('_', ' '))
+    elif pathname in categories_paths_5:
+       return app5.get_layout(pathname[10:].replace('_', ' '))
     else:
         return index_page
 
 if __name__ == '__main__':
-    app.run_server(host='0.0.0.0', debug=False)
-    # app.run_server(host='127.0.0.1', debug=True)
+    #app.run_server(host='0.0.0.0', debug=False)
+    app.run_server(host='127.0.0.1', debug=True)
 

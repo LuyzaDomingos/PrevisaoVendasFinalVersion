@@ -1,4 +1,4 @@
-# Aplicativo 2 (Listagem de categorias)
+# Aplicativo 2 (Previsão por categoria)
 import json
 import pandas as pd
 

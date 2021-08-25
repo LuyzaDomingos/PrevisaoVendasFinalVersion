@@ -404,12 +404,12 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
                     html.A(
                         children=[
                             html.Img(src=app.get_asset_url('graficos.png'), className='yellow-bg'),
-                        ], href=category.replace(' ', '_'), style = {'width':'60px', 'height':'60px', 'margin-right': '16px'}
+                        ], href='/apps/app3' + category.replace(' ', '_'), style = {'width':'60px', 'height':'60px', 'margin-right': '16px'}
                     ),
                     html.A(
                         children=[
                             html.Img(src=app.get_asset_url('relatorio.png'), className='yellow-bg'),
-                        ], href=' ', style = {'width':'60px', 'height':'60px', 'margin-right': '16px'}
+                        ], href='/apps/app5' + category.replace(' ', '_'), style = {'width':'60px', 'height':'60px', 'margin-right': '16px'}
                     )],
                     className='class-header')
                 ], className="card small-margin"))
