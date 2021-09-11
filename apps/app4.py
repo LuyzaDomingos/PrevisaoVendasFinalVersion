@@ -129,7 +129,7 @@ def update_list(*args):
     ctx = callback_context
     if not ctx.triggered or not any(args): # Caso entre aqui é por ter sido o startup do aplicativo
         #return ['flex-item' for _ in range(3)], no_update, no_update
-        return get_general_panel(data=app1.data_m, month=month, year=year, category=args[3], products=products), {'max-width': '1320px'}, no_update
+        return get_general_panel(data=app1.data_m, data_loss=app1.data_loss_m, month=month, year=year, category=args[3], products=products), {'max-width': '1320px'}, no_update
 
     # Obter o id do botão selecionado (ou não, caso não tenha sido um que disparou o callback)    
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
@@ -137,14 +137,14 @@ def update_list(*args):
         return no_update, no_update, no_update
     # Atualizar as saídas
     if button_id == "bt-geral":
-        return get_general_panel(data=app1.data_m, month=month, year=year, category=args[3], products=products), {'max-width': '1320px'}, "bt-geral"
+        return get_general_panel(data=app1.data_m, data_loss=app1.data_loss_m, month=month, year=year, category=args[3], products=products), {'max-width': '1320px'}, "bt-geral"
     if button_id == "bt-store":
         return get_list(app2.facts, month=month, year=year, items=stores, sales_panel=True, sales_data=data_stores_regions_m, sales_panel_category=args[3]), {'max-width': '1024px'}, "bt-store"
     if button_id == "bt-region":
         return get_list(app2.facts, month=month, year=year, items=regions, sales_panel=True, sales_data=data_stores_regions_m,  sales_panel_category=args[3]), {'max-width': '1024px'}, "bt-region"
     else: # O input que causou o callback não foi um botão
         if args[5] == "bt-geral":
-            return get_general_panel(data=app1.data_m, month=month, year=year, category=args[3], products=products), {'max-width': '1320px'}, no_update
+            return get_general_panel(data=app1.data_m, data_loss=app1.data_loss_m, month=month, year=year, category=args[3], products=products), {'max-width': '1320px'}, no_update
         if args[5] == "bt-store":
             return get_list(app2.facts, month=month, year=year, items=stores, sales_panel=True, sales_data=data_stores_regions_m,  sales_panel_category=args[3]), {'max-width': '1024px'}, no_update
         if args[5] == "bt-region":

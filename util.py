@@ -203,19 +203,20 @@ def get_stocks_figure(filtered_data, filtered_data_sales, product, freq='D'):
     
     return fig
 
-def get_sales_loss_figure(filtered_data_stock, filtered_data, product, freq='D', window=7):
-    filtered_data['moving_average'] = filtered_data[product].rolling(window=window).mean().fillna(0) # Gerar média móvel
-    filtered_data.loc[:'2019-01-01', 'moving_average'] = 0 # Não temos dados de estoque de 2019 para trás
-    filtered_data['loss'] = [np.round(average) if stock == 0 else 0 for (stock, average) in zip(filtered_data_stock[product], filtered_data['moving_average'])]
+def get_sales_loss_figure(filtered_data, filtered_data_loss, product, freq='D', window=7):
+    #filtered_data['moving_average'] = filtered_data[product].rolling(window=window).mean().fillna(0) # Gerar média móvel
+    #filtered_data.loc[:'2019-01-01', 'moving_average'] = 0 # Não temos dados de estoque de 2019 para trás
+    #filtered_data['loss'] = [np.round(average) if stock == 0 else 0 for (stock, average) in zip(filtered_data_stock[product], filtered_data['moving_average'])]
     if freq != 'D':
-        filtered_data = filtered_data.resample(freq).mean().astype(int)
+        filtered_data_loss = filtered_data_loss.resample(freq).sum()
+
     # Criar uma figura com eixos secundários
     fig = make_subplots(specs=[[{"secondary_y": False}]])
     
     fig.update_layout(title_text="Impacto nas vendas", xaxis_range=['2018-01-01', '2021-03-12'], legend=legend, height=426)
     # Adicionar as linhas
     fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product], name="Vendas no período", line={'color': '#045dd1'}))
-    fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data['loss'], name="Vendas perdidas", line={'color': '#d10b04'}))
+    fig.add_trace(go.Scatter(x=filtered_data_loss.index, y=filtered_data_loss[product], name="Vendas perdidas", line={'color': '#d10b04'}))
     # Nome dos eixos
     fig.update_yaxes(title_text="Quantidade de vendas")
     #fig.update_yaxes(title_text="Vendas acumuladas", secondary_y=False)
@@ -493,7 +494,7 @@ def draw_top_list(data, category_products, month=3, year=2021, top=5, sales_pane
                         'backgroundColor': 'rgb(248, 248, 248)'
                     }])
     
-def get_general_panel(data, month=3, year=2021, category='GERAL', products=None):
+def get_general_panel(data, data_loss, month=3, year=2021, category='GERAL', products=None):
     previous_year, previous_month = get_previous(year, month)
 
     fig = go.Figure()
@@ -509,9 +510,9 @@ def get_general_panel(data, month=3, year=2021, category='GERAL', products=None)
     # Vendas perdidas por ruptura de estoque
     fig.add_trace(go.Indicator(
         mode = "number+delta",
-        value = 0,
+        value = data_loss.loc[(data_loss.index.month == month) & (data_loss.index.year == year), category][0],
         title = {"text": 'Vendas perdidas <br> por ruptura de estoque'},
-        delta = {'reference': 0, 'relative': True, 'position': 'right'},
+        delta = {'reference': data_loss.loc[(data_loss.index.month == previous_month) & (data_loss.index.year == previous_year), category][0], 'relative': True, 'position': 'right'},
         domain = {'row': 1, 'column': 0}))
 
     highlight_index = (month - 1) + 12 * (year - 2018)
