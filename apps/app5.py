@@ -33,7 +33,7 @@ dates = ['3/2021', '2/2021', '1/2021',
 #categories = list(json.load(open('previsao/subcategorias.json')).keys())
 #categories.insert(0, 'GERAL')
 # Carregar dados de resumo
-data_stores_regions = pd.read_csv('previsao/Resumo Lojas.csv', index_col=0)
+data_stores_regions = pd.read_csv('previsao/resumo_geral.csv', index_col=0)
 data_stores_regions.index = pd.to_datetime(data_stores_regions.index)
 data_stores_regions_m = data_stores_regions.resample('M').sum()
 

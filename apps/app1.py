@@ -17,7 +17,7 @@ from util import get_forecast_figure, get_sales_figure, get_indicators_figure, g
 from app import app
 
 # Leitura dos dados, amostragem diária
-data_d = pd.read_csv("previsao/geral.csv", index_col=0)
+data_d = pd.read_csv("previsao/geral2.csv", index_col=0)
 data_d.fillna(value=0, inplace=True)
 data_d.index = pd.to_datetime(data_d.index)
 data_d = data_d[:'2021-03-12']
@@ -26,7 +26,7 @@ data_w = data_d.resample('W-MON').sum()
 # Amostragem mensal
 data_m = data_d.resample('M').sum()
 # Dados de estoque
-data_stock = pd.read_csv("previsao/estoque.csv", index_col=0)
+data_stock = pd.read_csv("previsao/estoque2.csv", index_col=0)
 data_stock.index = pd.to_datetime(data_stock.index)
 data_stock = data_stock[:'2021-03-12']
 # Dados de ruptura
@@ -37,7 +37,7 @@ data_loss = data_loss[:'2021-03-12']
 data_loss_m = data_loss.resample('M').sum()
 
 # Dicionário de categorias
-categories_dict = json.load(open('previsao/subcategorias.json'))
+categories_dict = json.load(open('previsao/classificacao.json'))
 # Dicionário de frequências
 freq_dict = {
     'Diário': 'D',

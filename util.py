@@ -18,9 +18,9 @@ from random import randint
 legend = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
 
 # Carregar as previsões
-yhat_df = pd.read_csv('previsao/previsao_geral.csv', index_col=0)
-yhat_lower_df = pd.read_csv('previsao/previsal_geral_yhat_lower.csv', index_col=0) # O nome do arquivo está correto, porém incorretamente escrito
-yhat_upper_df = pd.read_csv('previsao/previsao_geral_yhat_upper.csv', index_col=0)
+yhat_df = pd.read_csv('previsao/previsao_geral2.csv', index_col=0)
+yhat_lower_df = pd.read_csv('previsao/previsao_geral_yhat_lower2.csv', index_col=0)
+yhat_upper_df = pd.read_csv('previsao/previsao_geral_yhat_upper2.csv', index_col=0)
 # Converter os índices para datetime
 yhat_df.index = pd.to_datetime(yhat_df.index)
 yhat_lower_df.index = pd.to_datetime(yhat_lower_df.index)
@@ -118,9 +118,10 @@ def get_sales_figure(filtered_data, product, sales_panel=False, highlight=None):
     else:
         fig = go.Figure()
         fig.update_layout(margin=dict(r=24, b=40))
-    fig.update_layout(title_text="Vendas observadas", xaxis_range=['2018-01-01', '2021-03-12'], legend=legend, height=426)
     # Adicionar as linhas
     if sales_panel is True:
+        # Período do eixo x
+        fig.update_layout(title_text="Vendas observadas", xaxis_range=['2018-01-01', '2021-04-30'], legend=legend, height=426)
         if highlight is None:
             fig.add_trace(go.Bar(x=filtered_data.index, y=filtered_data[product], name="Vendas acumuladas", marker_color='#045dd1'))
         else:
@@ -131,6 +132,9 @@ def get_sales_figure(filtered_data, product, sales_panel=False, highlight=None):
         # Nome do eixo
         fig.update_yaxes(title_text="Vendas no período")
     else:
+        # Período do eixo x
+        fig.update_layout(title_text="Vendas observadas", xaxis_range=['2018-01-01', '2021-03-12'], legend=legend, height=426)
+        
         fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product].cumsum(), name="Vendas acumuladas", line={'color': '#045dd1'}), secondary_y=False)
         fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product], name="Vendas no período", line={'color': 'rgba(101, 156, 0, 0.8)'}), secondary_y=True)
         # Nome dos eixos
@@ -138,7 +142,7 @@ def get_sales_figure(filtered_data, product, sales_panel=False, highlight=None):
         fig.update_yaxes(title_text="Vendas acumuladas", secondary_y=False)
 
     # Linha y = 0
-    fig.add_shape(type='line', x0='2018-01-01', y0=0, x1='2021-03-12', y1=0, line={'color': 'rgba(0, 0, 0, 1)'})
+    fig.add_shape(type='line', x0='2018-01-01', y0=0, x1='2022-01-01', y1=0, line={'color': 'rgba(0, 0, 0, 1)'})
     # Cores do gráfico
     fig.layout.xaxis.gridcolor='rgba(189, 189, 189, 0.5)'
     fig.layout.yaxis.gridcolor='rgba(189, 189, 189, 0.5)'
@@ -341,6 +345,8 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
         itr = filtered_facts['Categoria'].unique()
         
     for category in itr:
+        if category == 'teste':
+            continue      
         fig = go.Figure()
         fig.update_layout(height=80, margin=dict(l=40, r=40, t=8, b=8), plot_bgcolor='#333333')
         if sales_panel is False:
@@ -459,7 +465,7 @@ def get_top_list(data, category_products, month=3, year=2021, top=5, sales_panel
         top_df['Variação'] = (top_df['Qtd. vendida']- prev_sales) / prev_sales * 100
         top_df.fillna(value=0, inplace=True)
         top_df['Variação'] = top_df['Variação'].apply(lambda x : "{:3.2f}%".format(x))
-        top_df['Qtd. vendida'] = top_df['Qtd. vendida'].apply(lambda x : "{:5d}".format(x))
+        top_df['Qtd. vendida'] = top_df['Qtd. vendida'].apply(lambda x : "{:5d}".format(int(x)))
         top_df['Produto'] = top_df['Produto'].apply(lambda x : x if len(x) < 30 else '{}...'.format(x[:30]))
         #top_df['Valor'] = '0'
         return top_df
@@ -528,5 +534,5 @@ def get_general_panel(data, data_loss, month=3, year=2021, category='GERAL', pro
             # Lista de mais vendidos e menos vendidos
             html.Div(children=[
                     html.Div(children=[html.P('Mais vendidos', className='header-description'), draw_top_list(data, products, sales_panel=True, month=month, year=year)], className='left', style={'background-color': 'white', 'width': '50%', 'border-top-width': '0'}),
-                    html.Div(children=[html.P('Menos vendidos', className='header-description'), draw_top_list(data, products, sales_panel=True, ascending=True, month=month, year=year)], className='right', style={'background-color': 'white', 'width': '50%', 'border-left-width': '24px', 'border-top-width': '0'})],
+                    html.Div(children=[html.P('Maiores perdas por ruptura', className='header-description'), draw_top_list(data_loss, products, sales_panel=True, month=month, year=year)], className='right', style={'background-color': 'white', 'width': '50%', 'border-left-width': '24px', 'border-top-width': '0'})],
                     style={'background-color': 'white', 'width': '100%', 'height': '343px'})]

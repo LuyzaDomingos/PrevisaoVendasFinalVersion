@@ -30,10 +30,10 @@ dates = ['3/2021', '2/2021', '1/2021',
         '12/2019', '11/2019', '10/2019', '9/2019', '8/2019', '7/2019', '6/2019', '5/2019', '4/2019', '3/2019', '2/2019', '1/2019', 
         '12/2018', '11/2018', '10/2018', '9/2018', '8/2018', '7/2018', '6/2018', '5/2018', '4/2018', '3/2018', '2/2018', '1/2018']
 
-categories = list(json.load(open('previsao/subcategorias.json')).keys())
+categories = list(json.load(open('previsao/classificacao.json')).keys())
 categories.insert(0, 'GERAL')
 # Carregar dados de resumo
-data_stores_regions = pd.read_csv('previsao/Resumo Lojas.csv', index_col=0)
+data_stores_regions = pd.read_csv('previsao/resumo_geral.csv', index_col=0)
 data_stores_regions.index = pd.to_datetime(data_stores_regions.index)
 data_stores_regions_m = data_stores_regions.resample('M').sum()
 
@@ -42,7 +42,7 @@ layout = html.Div(children=[
     html.Div(children=[
                 html.Br(),
                 html.H1(children="Painel de Vendas", className="header-title"),
-                html.P(children="Visualização das vendas por região, loja, ou geral. Os dados são fictícios. WIP.", className="header-description"),
+                html.P(children="Visualização das vendas por região, loja, ou geral.", className="header-description"),
                 html.Div([
                 html.Button('Geral', id='bt-geral', n_clicks=0, className='flex-item'),
                 html.Button('Região', id='bt-region', n_clicks=0, className='flex-item'),
