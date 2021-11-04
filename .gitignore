@@ -9,3 +9,5 @@ previsao/2021.txt
 previsao/df2.csv
 venv
 .DS_Store
+__pycache__/
+apps/__pycache__/
