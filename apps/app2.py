@@ -10,7 +10,6 @@ from dash import no_update
 from dash_extensions import Download
 from dash_extensions.snippets import send_data_frame, send_bytes
 import xlsxwriter
-
 from app import app
 
 from util import get_list
