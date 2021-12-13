@@ -344,43 +344,189 @@ def get_stocks_figure(filtered_data, filtered_data_sales, product, freq="D"):
 
 
 def get_sales_loss_figure(
-    filtered_data, filtered_data_loss, product, freq="D", window=7
+    filtered_data_sales,
+    filtered_data_stock,
+    filtered_data_security_store,
+    filtered_data_security_dc,
+    filtered_data_security_dc_stores,
+    filtered_data_loss_purchase,
+    filtered_data_loss_store,
+    filtered_data_loss_stock,
+    product,
+    freq="D",
+    window=7,
 ):
     # filtered_data['moving_average'] = filtered_data[product].rolling(window=window).mean().fillna(0) # Gerar média móvel
     # filtered_data.loc[:'2019-01-01', 'moving_average'] = 0 # Não temos dados de estoque de 2019 para trás
     # filtered_data['loss'] = [np.round(average) if stock == 0 else 0 for (stock, average) in zip(filtered_data_stock[product], filtered_data['moving_average'])]
     if freq != "D":
-        filtered_data_loss = filtered_data_loss.resample(freq).sum()
-
+        filtered_data_sales = filtered_data_sales.resample(freq).sum()
+        filtered_data_stock = filtered_data_stock.resample(freq).sum()
+        filtered_data_security_store = filtered_data_security_store.resample(
+            freq
+        ).sum()
+        filtered_data_security_dc = filtered_data_security_dc.resample(
+            freq
+        ).sum()
+        filtered_data_security_dc_stores = (
+            filtered_data_security_dc_stores.resample(freq).sum()
+        )
+        filtered_data_loss_purchase = filtered_data_loss_purchase.resample(
+            freq
+        ).sum()
+        filtered_data_loss_store = filtered_data_loss_store.resample(
+            freq
+        ).sum()
+        filtered_data_loss_stock = filtered_data_loss_stock.resample(
+            freq
+        ).sum()
+    # Zerar as rupturas até 2019, por falta de dados (Falso positivo)
+    filtered_data_loss_purchase.loc[:"2019-01-01", product] = 0
+    filtered_data_loss_store.loc[:"2019-01-01", product] = 0
+    filtered_data_loss_stock.loc[:"2019-01-01", product] = 0
+    # Trocar os dias que não houve ruptura por Nan
+    # Isso é feito para que o plotly não considere essas datas na hora de exibir a zona referente aos dias de rupturas
+    filtered_data_loss_purchase[product].replace({0: np.nan})
+    filtered_data_loss_store[product].replace({0: np.nan})
+    filtered_data_loss_stock[product].replace({0: np.nan})
+    # Pegar o valor máximo entre venda e estoque
+    max_value = 0
+    if max(filtered_data_stock[product]) > max(filtered_data_sales[product]):
+        max_value = max(filtered_data_stock[product])
+    else:
+        max_value = max(filtered_data_sales[product])
     # Criar uma figura com eixos secundários
-    fig = make_subplots(specs=[[{"secondary_y": False}]])
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
 
     fig.update_layout(
-        title_text="Impacto nas vendas",
+        # title_text="Visualização dos períodos em que houveram rupturas",
         xaxis_range=["2018-01-01", "2021-03-12"],
         legend=legend,
         height=426,
     )
     # Adicionar as linhas
+    # Vendas da Loja
     fig.add_trace(
         go.Scatter(
-            x=filtered_data.index,
-            y=filtered_data[product],
-            name="Vendas no período",
-            line={"color": "#045dd1"},
-        )
+            x=filtered_data_sales.index,
+            y=filtered_data_sales[product],
+            name="Vendas no período (Loja)",
+            line={"color": "rgba(23, 67, 205, 0.6)"},
+        ),
+        secondary_y=False,
     )
+    # Estoque da Loja
     fig.add_trace(
         go.Scatter(
-            x=filtered_data_loss.index,
-            y=filtered_data_loss[product],
-            name="Vendas perdidas",
-            line={"color": "#d10b04"},
-        )
+            x=filtered_data_stock.index,
+            y=filtered_data_stock[product],
+            name="Estoque no período (Loja)",
+            line={"color": "rgba(70, 168, 66, 0.6)"},
+        ),
+        secondary_y=True,
+    )
+    # Estoque de Segurança da Loja
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_security_store.index,
+            y=filtered_data_security_store[product],
+            name="Estoque de segurança (Loja)",
+            line={"color": "#d10b04", "dash": "dash"},
+        ),
+        secondary_y=False,
+    )
+    # Estoque de Segurança do CD
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_security_dc.index,
+            y=filtered_data_security_dc[product],
+            name="Estoque de segurança (CD)",
+            line={"color": "#d17000", "dash": "dash"},
+        ),
+        secondary_y=False,
+    )
+    # Estoque de Segurança das lojas abastecidas pelo CD
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_security_dc_stores.index,
+            y=filtered_data_security_dc_stores[product],
+            name="Estoque de segurança (Lojas CD)",
+            line={"color": "#cfc102", "dash": "dash"},
+        ),
+        secondary_y=False,
+    )
+    # Linha y = 0
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_security_dc_stores.index,
+            y=(filtered_data_security_dc_stores[product] * 0),
+            showlegend=False,
+            line_color="rgba(0, 0, 0, 0.0)",
+        ),
+        secondary_y=False,
+    )
+    # Ruptura de Loja
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_loss_store.index,
+            y=(filtered_data_loss_store[product] * max_value),
+            # mode='none',
+            fill="tonexty",
+            fillcolor="rgba(111, 114, 113, 0.2)",
+            name="Ruptura de Loja",
+            line_color="rgba(111, 114, 113, 0.2)",
+        ),
+        secondary_y=False,
+    )
+    # Linha y = 0
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_security_dc_stores.index,
+            y=(filtered_data_security_dc_stores[product] * 0),
+            showlegend=False,
+            line_color="rgba(0, 0, 0, 0.0)",
+        ),
+        secondary_y=False,
+    )
+    # Ruptura de Compra
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_loss_purchase.index,
+            y=(filtered_data_loss_purchase[product] * max_value),
+            # mode='none',
+            fill="tonexty",
+            fillcolor="rgba(26, 189, 185, 0.2)",
+            name="Ruptura de Compra",
+            line_color="rgba(26, 189, 185, 0.2)",
+        ),
+        secondary_y=False,
+    )
+    # Linha y = 0
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_security_dc_stores.index,
+            y=(filtered_data_security_dc_stores[product] * 0),
+            showlegend=False,
+            line_color="rgba(0, 0, 0, 0.0)",
+        ),
+        secondary_y=False,
+    )
+    # Ruptura de Estoque
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_loss_stock.index,
+            y=(filtered_data_loss_stock[product] * max_value),
+            # mode='none',
+            fill="tonexty",
+            fillcolor="rgba(137, 36, 197, 0.2)",
+            name="Ruptura de Estoque",
+            line_color="rgba(137, 36, 197, 0.2)",
+        ),
+        secondary_y=False,
     )
     # Nome dos eixos
-    fig.update_yaxes(title_text="Quantidade de vendas")
-    # fig.update_yaxes(title_text="Vendas acumuladas", secondary_y=False)
+    fig.update_yaxes(title_text="Quantidade de vendas", secondary_y=False)
+    fig.update_yaxes(title_text="Quantidade de estoque", secondary_y=True)
 
     # Linha y = 0
     fig.add_shape(

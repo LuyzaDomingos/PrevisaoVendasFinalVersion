@@ -26,26 +26,45 @@ from util import (
 
 from app import app
 
+# Função para leitura de dados
+def read_data(path, fillna=False, end_date="2021-03-12"):
+    data = pd.read_csv(path, index_col=0)
+    if fillna is True:
+        data.fillna(value=0, inplace=True)
+    data.index = pd.to_datetime(data.index)
+    data = data[:end_date]
+
+    return data
+
+
 # Leitura dos dados, amostragem diária
-data_d = pd.read_csv("previsao/geral2.csv", index_col=0)
-data_d.fillna(value=0, inplace=True)
-data_d.index = pd.to_datetime(data_d.index)
-data_d = data_d[:"2021-03-12"]
+data_d = read_data("previsao/geral2.csv", fillna=True)
 # Amostragem semanal
 data_w = data_d.resample("W-MON").sum()
 # Amostragem mensal
 data_m = data_d.resample("M").sum()
 # Dados de estoque
-data_stock = pd.read_csv("previsao/estoque2.csv", index_col=0)
-data_stock.index = pd.to_datetime(data_stock.index)
-data_stock = data_stock[:"2021-03-12"]
+data_stock = read_data("previsao/estoque2.csv")
 # Dados de ruptura
-data_loss = pd.read_csv("previsao/ruptura_geral.csv", index_col=0)
-data_loss.index = pd.to_datetime(data_loss.index)
-data_loss = data_loss[:"2021-03-12"]
-# Ruptura mensal
-data_loss_m = data_loss.resample("M").sum()
-
+data_loss = read_data("previsao/ruptura_geral.csv")
+# Ruptura versão 2 WIP
+# Para efeitos de teste, trabalharemos no momento com os dados da loja da lagoa
+# Vendas da Loja
+df_sales = read_data("data/sales/Lagoa_2.csv")
+# Estoque da Loja
+df_stock = read_data("data/stock/Lagoa_2.csv")
+# Estoque de segurança do CD
+security_dc = read_data("data/ES CBO.csv")
+# Estoque de segurança das lojas abastecidas pelo CD
+security_dc_stores = read_data("data/ES CBO Lojas.csv")
+# Estoque de segurança da Loja
+security_store = read_data("data/ES Lagoa.csv")
+# Ruptura de Loja
+data_loss_store = read_data("data/Loja#Lagoa.csv")
+# Ruptura de Compra
+data_loss_purchase = read_data("data/Compra#Lagoa.csv")
+# Ruptura de Estoque
+data_loss_stock = read_data("data/Estoque#Lagoa.csv")
 # Dicionário de categorias
 categories_dict = json.load(open("previsao/classificacao.json"))
 # Dicionário de frequências
@@ -109,7 +128,7 @@ layout = html.Div(
                                 {"label": key, "value": key}
                                 for key in list(categories_dict.keys())
                             ],
-                            value="AUDIO E SOM",
+                            value="AR E VENTILACAO",
                             clearable=False,
                             className="dropdown",
                         ),
@@ -122,9 +141,11 @@ layout = html.Div(
                             id="product-filter",
                             options=[
                                 {"label": product, "value": product}
-                                for product in categories_dict["AUDIO E SOM"]
+                                for product in categories_dict[
+                                    "AR E VENTILACAO"
+                                ]
                             ],
-                            value="RADIO RECEPTOR 2 FXS RM PFT22AC",
+                            value="VENTILADOR 30CM NV-15 6P BR 220V",
                             clearable=False,
                             className="dropdown",
                         ),
@@ -327,14 +348,30 @@ def update_charts(
         )
         filtered_data_stock = data_stock.loc[mask, :]
         mask = (data_loss.index >= start_date) & (data_loss.index <= end_date)
-        filtered_data_loss = data_loss.loc[mask, :]
+        filtered_data_sales = df_sales.loc[mask, :]
+        filtered_data_stock = df_stock.loc[mask, :]
+        filtered_data_security_store = security_store.loc[mask, :]
+        filtered_data_security_dc = security_dc.loc[mask, :]
+        filtered_data_security_dc_stores = security_dc_stores.loc[mask, :]
+        filtered_data_loss_store = data_loss_store.loc[mask, :]
+        filtered_data_loss_stock = data_loss_stock.loc[mask, :]
+        filtered_data_loss_purchase = data_loss_purchase.loc[mask, :]
 
         return (
             get_stocks_figure(
                 filtered_data_stock, filtered_data, product, frequency
             ),
             get_sales_loss_figure(
-                filtered_data, filtered_data_loss, product, frequency
+                filtered_data_sales,
+                filtered_data_stock,
+                filtered_data_security_store,
+                filtered_data_security_dc,
+                filtered_data_security_dc_stores,
+                filtered_data_loss_purchase,
+                filtered_data_loss_store,
+                filtered_data_loss_stock,
+                product,
+                freq=frequency,
             ),
             "bt-stock",
         )
@@ -362,14 +399,30 @@ def update_charts(
             mask = (data_loss.index >= start_date) & (
                 data_loss.index <= end_date
             )
-            filtered_data_loss = data_loss.loc[mask, :]
+            filtered_data_sales = df_sales.loc[mask, :]
+            filtered_data_stock = df_stock.loc[mask, :]
+            filtered_data_security_store = security_store.loc[mask, :]
+            filtered_data_security_dc = security_dc.loc[mask, :]
+            filtered_data_security_dc_stores = security_dc_stores.loc[mask, :]
+            filtered_data_loss_store = data_loss_store.loc[mask, :]
+            filtered_data_loss_stock = data_loss_stock.loc[mask, :]
+            filtered_data_loss_purchase = data_loss_purchase.loc[mask, :]
 
             return (
                 get_stocks_figure(
                     filtered_data_stock, filtered_data, product, frequency
                 ),
                 get_sales_loss_figure(
-                    filtered_data, filtered_data_loss, product, frequency
+                    filtered_data_sales,
+                    filtered_data_stock,
+                    filtered_data_security_store,
+                    filtered_data_security_dc,
+                    filtered_data_security_dc_stores,
+                    filtered_data_loss_purchase,
+                    filtered_data_loss_store,
+                    filtered_data_loss_stock,
+                    product,
+                    freq=frequency,
                 ),
                 no_update,
             )
