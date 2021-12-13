@@ -18,27 +18,45 @@ from random import randint
 legend = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
 
 # Carregar as previsões
-yhat_df = pd.read_csv('previsao/previsao_geral2.csv', index_col=0)
-yhat_lower_df = pd.read_csv('previsao/previsao_geral_yhat_lower2.csv', index_col=0)
-yhat_upper_df = pd.read_csv('previsao/previsao_geral_yhat_upper2.csv', index_col=0)
+yhat_df = pd.read_csv("previsao/previsao_geral2.csv", index_col=0)
+yhat_lower_df = pd.read_csv(
+    "previsao/previsao_geral_yhat_lower2.csv", index_col=0
+)
+yhat_upper_df = pd.read_csv(
+    "previsao/previsao_geral_yhat_upper2.csv", index_col=0
+)
 # Converter os índices para datetime
 yhat_df.index = pd.to_datetime(yhat_df.index)
 yhat_lower_df.index = pd.to_datetime(yhat_lower_df.index)
 yhat_upper_df.index = pd.to_datetime(yhat_upper_df.index)
 # Dicionário de previsões
 forecast_dict = {
-    'D': [yhat_df.resample('D').sum(), yhat_lower_df.resample('D').sum(), yhat_upper_df.resample('D').sum()],
-    'W-MON': [yhat_df.resample('W-MON').sum(), yhat_lower_df.resample('W-MON').sum(), yhat_upper_df.resample('W-MON').sum()],
-    'M': [yhat_df.resample('M').sum(), yhat_lower_df.resample('M').sum(), yhat_upper_df.resample('M').sum()]
+    "D": [
+        yhat_df.resample("D").sum(),
+        yhat_lower_df.resample("D").sum(),
+        yhat_upper_df.resample("D").sum(),
+    ],
+    "W-MON": [
+        yhat_df.resample("W-MON").sum(),
+        yhat_lower_df.resample("W-MON").sum(),
+        yhat_upper_df.resample("W-MON").sum(),
+    ],
+    "M": [
+        yhat_df.resample("M").sum(),
+        yhat_lower_df.resample("M").sum(),
+        yhat_upper_df.resample("M").sum(),
+    ],
 }
+
 
 def heroku():
     return False
 
-def get_forecast_figure(filtered_data, product, split_date, freq='D'):
+
+def get_forecast_figure(filtered_data, product, split_date, freq="D"):
     size_train = len(filtered_data[:split_date])
     size_test = len(filtered_data[split_date:])
-    '''
+    """
     path = "previsao/forecasts/" + freq + "/" + product.replace(" ", "_").replace("/", "_") + ".csv"
     # Uma espécie de cache para não repetir a computação do modelo toda vez que selecionar um produto
     try:
@@ -60,58 +78,85 @@ def get_forecast_figure(filtered_data, product, split_date, freq='D'):
     forecast['yhat'] = forecast['yhat'].apply(lambda x : 0 if x < 0 else round(x))
     forecast['yhat_lower'] = forecast['yhat_lower'].apply(lambda x : 0 if x < 0 else round(x))
     forecast['yhat_upper'] = forecast['yhat_upper'].apply(lambda x : 0 if x < 0 else round(x))
-    '''
-    fig = px.line(range_x=['2018-01-01', '2022-01-01'],
-                    range_y=[0, max(filtered_data[product] * 1.1)],
-                    labels={'y': 'Quantidade Vendida', 'x': 'Período'},
-                    title='Projeção de vendas')
-    '''
+    """
+    fig = px.line(
+        range_x=["2018-01-01", "2022-01-01"],
+        range_y=[0, max(filtered_data[product] * 1.1)],
+        labels={"y": "Quantidade Vendida", "x": "Período"},
+        title="Projeção de vendas",
+    )
+    """
     fig.add_trace(go.Scatter(x=filtered_data[size_train:].index, y=filtered_data[product][size_train:],
                         mode='markers',
                         name='Vendas observadas',
                         showlegend=False,
                         line={'color': '#045dd1'}))
-    '''
-    fig.add_trace(go.Scatter(x=filtered_data[:size_train].index, y=filtered_data[product][:size_train],
-                        mode='lines',
-                        name='Vendas observadas',
-                        line={'color': '#045dd1'}))
-                        
-    fig.add_trace(go.Scatter(x=forecast_dict[freq][0].index, y=forecast_dict[freq][0][product],
-                        mode='lines',
-                        name='Vendas projetadas',
-                        line={'color': '#d10b04'}))
+    """
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data[:size_train].index,
+            y=filtered_data[product][:size_train],
+            mode="lines",
+            name="Vendas observadas",
+            line={"color": "#045dd1"},
+        )
+    )
 
-    fig.add_trace(go.Scatter(x=forecast_dict[freq][0].index, y=forecast_dict[freq][1][product],
-                        #mode='none',
-                        name='Limite inferior',
-                        showlegend=False,
-                        line_color='rgba(192, 43, 29, 0.2)'))
-                        
-    fig.add_trace(go.Scatter(x=forecast_dict[freq][0].index, y=forecast_dict[freq][2][product],
-                        #mode='none',
-                        fill='tonexty',
-                        fillcolor='rgba(192, 43, 29, 0.2)',
-                        name='Limite superior',
-                        showlegend=False,
-                        line_color='rgba(192, 43, 29, 0.2)'))
-                        
-    fig.add_shape(type='line',
-                  x0=split_date,
-                  y0=0,
-                  x1=split_date,
-                  y1=max(filtered_data[product] * 1.1),
-                  line={'color': '#c4c7cc'})
-                  
-    fig.layout.xaxis.linecolor='rgba(0, 0, 0, 1)'
-    fig.layout.xaxis.gridcolor='rgba(189, 189, 189, 0.5)'
-    fig.layout.yaxis.gridcolor='rgba(189, 189, 189, 0.5)'
-    fig.layout.plot_bgcolor='rgba(255, 255, 255, 1)'
+    fig.add_trace(
+        go.Scatter(
+            x=forecast_dict[freq][0].index,
+            y=forecast_dict[freq][0][product],
+            mode="lines",
+            name="Vendas projetadas",
+            line={"color": "#d10b04"},
+        )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=forecast_dict[freq][0].index,
+            y=forecast_dict[freq][1][product],
+            # mode='none',
+            name="Limite inferior",
+            showlegend=False,
+            line_color="rgba(192, 43, 29, 0.2)",
+        )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=forecast_dict[freq][0].index,
+            y=forecast_dict[freq][2][product],
+            # mode='none',
+            fill="tonexty",
+            fillcolor="rgba(192, 43, 29, 0.2)",
+            name="Limite superior",
+            showlegend=False,
+            line_color="rgba(192, 43, 29, 0.2)",
+        )
+    )
+
+    fig.add_shape(
+        type="line",
+        x0=split_date,
+        y0=0,
+        x1=split_date,
+        y1=max(filtered_data[product] * 1.1),
+        line={"color": "#c4c7cc"},
+    )
+
+    fig.layout.xaxis.linecolor = "rgba(0, 0, 0, 1)"
+    fig.layout.xaxis.gridcolor = "rgba(189, 189, 189, 0.5)"
+    fig.layout.yaxis.gridcolor = "rgba(189, 189, 189, 0.5)"
+    fig.layout.plot_bgcolor = "rgba(255, 255, 255, 1)"
     fig.update_layout(legend=legend)
-            
+
     return fig
-    
-def get_sales_figure(filtered_data, product, sales_panel=False, highlight=None):
+
+
+def get_sales_figure(
+    filtered_data, product, sales_panel=False, highlight=None
+):
     # Criar uma figura com eixos secundários, caso não seja para o painel de vendas
     if sales_panel is False:
         fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -121,188 +166,506 @@ def get_sales_figure(filtered_data, product, sales_panel=False, highlight=None):
     # Adicionar as linhas
     if sales_panel is True:
         # Período do eixo x
-        fig.update_layout(title_text="Vendas observadas", xaxis_range=['2018-01-01', '2021-04-30'], legend=legend, height=426)
+        fig.update_layout(
+            title_text="Vendas observadas",
+            xaxis_range=["2018-01-01", "2021-04-30"],
+            legend=legend,
+            height=426,
+        )
         if highlight is None:
-            fig.add_trace(go.Bar(x=filtered_data.index, y=filtered_data[product], name="Vendas acumuladas", marker_color='#045dd1'))
+            fig.add_trace(
+                go.Bar(
+                    x=filtered_data.index,
+                    y=filtered_data[product],
+                    name="Vendas acumuladas",
+                    marker_color="#045dd1",
+                )
+            )
         else:
-            colors = ['#045dd1', ] * len(filtered_data)
-            colors[highlight] = 'crimson'
-            fig.add_trace(go.Bar(x=filtered_data.index, y=filtered_data[product], name="Vendas acumuladas", marker_color=colors))
+            colors = [
+                "#045dd1",
+            ] * len(filtered_data)
+            colors[highlight] = "crimson"
+            fig.add_trace(
+                go.Bar(
+                    x=filtered_data.index,
+                    y=filtered_data[product],
+                    name="Vendas acumuladas",
+                    marker_color=colors,
+                )
+            )
 
         # Nome do eixo
         fig.update_yaxes(title_text="Vendas no período")
     else:
         # Período do eixo x
-        fig.update_layout(title_text="Vendas observadas", xaxis_range=['2018-01-01', '2021-03-12'], legend=legend, height=426)
-        
-        fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product].cumsum(), name="Vendas acumuladas", line={'color': '#045dd1'}), secondary_y=False)
-        fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product], name="Vendas no período", line={'color': 'rgba(101, 156, 0, 0.8)'}), secondary_y=True)
+        fig.update_layout(
+            title_text="Vendas observadas",
+            xaxis_range=["2018-01-01", "2021-03-12"],
+            legend=legend,
+            height=426,
+        )
+
+        fig.add_trace(
+            go.Scatter(
+                x=filtered_data.index,
+                y=filtered_data[product].cumsum(),
+                name="Vendas acumuladas",
+                line={"color": "#045dd1"},
+            ),
+            secondary_y=False,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=filtered_data.index,
+                y=filtered_data[product],
+                name="Vendas no período",
+                line={"color": "rgba(101, 156, 0, 0.8)"},
+            ),
+            secondary_y=True,
+        )
         # Nome dos eixos
         fig.update_yaxes(title_text="Vendas no período", secondary_y=True)
         fig.update_yaxes(title_text="Vendas acumuladas", secondary_y=False)
 
     # Linha y = 0
-    fig.add_shape(type='line', x0='2018-01-01', y0=0, x1='2022-01-01', y1=0, line={'color': 'rgba(0, 0, 0, 1)'})
+    fig.add_shape(
+        type="line",
+        x0="2018-01-01",
+        y0=0,
+        x1="2022-01-01",
+        y1=0,
+        line={"color": "rgba(0, 0, 0, 1)"},
+    )
     # Cores do gráfico
-    fig.layout.xaxis.gridcolor='rgba(189, 189, 189, 0.5)'
-    fig.layout.yaxis.gridcolor='rgba(189, 189, 189, 0.5)'
-    fig.layout.plot_bgcolor='rgba(255, 255, 255, 1)'
-    
+    fig.layout.xaxis.gridcolor = "rgba(189, 189, 189, 0.5)"
+    fig.layout.yaxis.gridcolor = "rgba(189, 189, 189, 0.5)"
+    fig.layout.plot_bgcolor = "rgba(255, 255, 255, 1)"
+
     return fig
 
-def get_stocks_figure(filtered_data, filtered_data_sales, product, freq='D'):
+
+def get_stocks_figure(filtered_data, filtered_data_sales, product, freq="D"):
     # Obter o estoque atual do produto selecionado
     current_stock = filtered_data[product].iloc[-1]
     # Obter a média de estoque dos últimos 12 meses
-    average_stock = filtered_data[product].resample('M').mean().astype(int)
+    average_stock = filtered_data[product].resample("M").mean().astype(int)
     average_stock = average_stock[-12:].mean()
     # Reorganizar os dados conforme o período selecionado
-    if freq != 'D':
+    if freq != "D":
         filtered_data = filtered_data.resample(freq).mean().astype(int)
 
     # Obter a quantidade prevista de vendas no próximo ano
-    future_sales = forecast_dict['D'][0][product].sum()
+    future_sales = forecast_dict["D"][0][product].sum()
     # Obter o giro
     if average_stock != 0:
         stock_turnover = future_sales / average_stock
     else:
         stock_turnover = 0
     # Obter a soma cumulativa da previsão do produto selecionado
-    forecast_cumsum = forecast_dict['D'][0][product].cumsum()
+    forecast_cumsum = forecast_dict["D"][0][product].cumsum()
     # Obter a cobertura
     stock_cover = len(forecast_cumsum[forecast_cumsum < current_stock])
 
     fig = make_subplots(specs=[[{"secondary_y": False}]])
-    if freq == 'M':
-        fig.update_layout(title_text="Estoque observado", xaxis_range=['2018-01-01', '2021-03-31'], legend=legend, height=426)
+    if freq == "M":
+        fig.update_layout(
+            title_text="Estoque observado",
+            xaxis_range=["2018-01-01", "2021-03-31"],
+            legend=legend,
+            height=426,
+        )
     else:
-        fig.update_layout(title_text="Estoque observado", xaxis_range=['2018-01-01', '2021-03-12'], legend=legend, height=426)
+        fig.update_layout(
+            title_text="Estoque observado",
+            xaxis_range=["2018-01-01", "2021-03-12"],
+            legend=legend,
+            height=426,
+        )
 
     # Cobertura
-    fig.add_trace(go.Indicator(
-        mode = "number",
-        value = stock_cover,
-        title = {"text": "<span style='font-size:0.8em;color:gray'>Cobertura</span>", "font":{"size":24}},
-        number = {'suffix': " dias", "font":{"size":32}},
-        domain = {'y': [0, 0.5], 'x': [0, 0.25]}))
-    fig.add_trace(go.Indicator(
-        mode = "number",
-        value = stock_turnover,
-        title = {"text": "<span style='font-size:0.8em;color:gray'>Giro</span>", "font":{"size":24}},
-        number = {'suffix': " p/ ano", "font":{"size":32}, "valueformat": ".1f"},
-        domain = {'y': [0.5, 1], 'x': [0, 0.25]}))
+    fig.add_trace(
+        go.Indicator(
+            mode="number",
+            value=stock_cover,
+            title={
+                "text": "<span style='font-size:0.8em;color:gray'>Cobertura</span>",
+                "font": {"size": 24},
+            },
+            number={"suffix": " dias", "font": {"size": 32}},
+            domain={"y": [0, 0.5], "x": [0, 0.25]},
+        )
+    )
+    fig.add_trace(
+        go.Indicator(
+            mode="number",
+            value=stock_turnover,
+            title={
+                "text": "<span style='font-size:0.8em;color:gray'>Giro</span>",
+                "font": {"size": 24},
+            },
+            number={
+                "suffix": " p/ ano",
+                "font": {"size": 32},
+                "valueformat": ".1f",
+            },
+            domain={"y": [0.5, 1], "x": [0, 0.25]},
+        )
+    )
     # Adicionar a linha de estoque
-    fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product], name="Estoque no período", line={'color': '#045dd1'}))
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data.index,
+            y=filtered_data[product],
+            name="Estoque no período",
+            line={"color": "#045dd1"},
+        )
+    )
     # Nome dos eixos
-    if freq == 'D':
+    if freq == "D":
         fig.update_yaxes(title_text="Estoque no período")
     else:
         fig.update_yaxes(title_text="Estoque médio no período")
     # Linha y = 0
-    fig.add_shape(type='line', x0='2018-01-01', y0=0, x1='2021-03-31', y1=0, line={'color': 'rgba(0, 0, 0, 1)'})
+    fig.add_shape(
+        type="line",
+        x0="2018-01-01",
+        y0=0,
+        x1="2021-03-31",
+        y1=0,
+        line={"color": "rgba(0, 0, 0, 1)"},
+    )
     # Cores do gráfico
-    fig.layout.xaxis.gridcolor='rgba(189, 189, 189, 0.5)'
-    fig.layout.yaxis.gridcolor='rgba(189, 189, 189, 0.5)'
-    fig.layout.plot_bgcolor='rgba(255, 255, 255, 1)'
-    
+    fig.layout.xaxis.gridcolor = "rgba(189, 189, 189, 0.5)"
+    fig.layout.yaxis.gridcolor = "rgba(189, 189, 189, 0.5)"
+    fig.layout.plot_bgcolor = "rgba(255, 255, 255, 1)"
+
     return fig
 
-def get_sales_loss_figure(filtered_data, filtered_data_loss, product, freq='D', window=7):
-    #filtered_data['moving_average'] = filtered_data[product].rolling(window=window).mean().fillna(0) # Gerar média móvel
-    #filtered_data.loc[:'2019-01-01', 'moving_average'] = 0 # Não temos dados de estoque de 2019 para trás
-    #filtered_data['loss'] = [np.round(average) if stock == 0 else 0 for (stock, average) in zip(filtered_data_stock[product], filtered_data['moving_average'])]
-    if freq != 'D':
-        filtered_data_loss = filtered_data_loss.resample(freq).sum()
 
+def get_sales_loss_figure(
+    filtered_data_sales,
+    filtered_data_stock,
+    filtered_data_security_store,
+    filtered_data_security_dc,
+    filtered_data_security_dc_stores,
+    filtered_data_loss_purchase,
+    filtered_data_loss_store,
+    filtered_data_loss_stock,
+    product,
+    freq="D",
+    window=7,
+):
+    # filtered_data['moving_average'] = filtered_data[product].rolling(window=window).mean().fillna(0) # Gerar média móvel
+    # filtered_data.loc[:'2019-01-01', 'moving_average'] = 0 # Não temos dados de estoque de 2019 para trás
+    # filtered_data['loss'] = [np.round(average) if stock == 0 else 0 for (stock, average) in zip(filtered_data_stock[product], filtered_data['moving_average'])]
+    if freq != "D":
+        filtered_data_sales = filtered_data_sales.resample(freq).sum()
+        filtered_data_stock = filtered_data_stock.resample(freq).sum()
+        filtered_data_security_store = filtered_data_security_store.resample(
+            freq
+        ).sum()
+        filtered_data_security_dc = filtered_data_security_dc.resample(
+            freq
+        ).sum()
+        filtered_data_security_dc_stores = (
+            filtered_data_security_dc_stores.resample(freq).sum()
+        )
+        filtered_data_loss_purchase = filtered_data_loss_purchase.resample(
+            freq
+        ).sum()
+        filtered_data_loss_store = filtered_data_loss_store.resample(
+            freq
+        ).sum()
+        filtered_data_loss_stock = filtered_data_loss_stock.resample(
+            freq
+        ).sum()
+    # Zerar as rupturas até 2019, por falta de dados (Falso positivo)
+    filtered_data_loss_purchase.loc[:"2019-01-01", product] = 0
+    filtered_data_loss_store.loc[:"2019-01-01", product] = 0
+    filtered_data_loss_stock.loc[:"2019-01-01", product] = 0
+    # Trocar os dias que não houve ruptura por Nan
+    # Isso é feito para que o plotly não considere essas datas na hora de exibir a zona referente aos dias de rupturas
+    filtered_data_loss_purchase[product].replace({0: np.nan})
+    filtered_data_loss_store[product].replace({0: np.nan})
+    filtered_data_loss_stock[product].replace({0: np.nan})
+    # Pegar o valor máximo entre venda e estoque
+    max_value = 0
+    if max(filtered_data_stock[product]) > max(filtered_data_sales[product]):
+        max_value = max(filtered_data_stock[product])
+    else:
+        max_value = max(filtered_data_sales[product])
     # Criar uma figura com eixos secundários
-    fig = make_subplots(specs=[[{"secondary_y": False}]])
-    
-    fig.update_layout(title_text="Impacto nas vendas", xaxis_range=['2018-01-01', '2021-03-12'], legend=legend, height=426)
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+    fig.update_layout(
+        # title_text="Visualização dos períodos em que houveram rupturas",
+        xaxis_range=["2018-01-01", "2021-03-12"],
+        legend=legend,
+        height=426,
+    )
     # Adicionar as linhas
-    fig.add_trace(go.Scatter(x=filtered_data.index, y=filtered_data[product], name="Vendas no período", line={'color': '#045dd1'}))
-    fig.add_trace(go.Scatter(x=filtered_data_loss.index, y=filtered_data_loss[product], name="Vendas perdidas", line={'color': '#d10b04'}))
+    # Vendas da Loja
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_sales.index,
+            y=filtered_data_sales[product],
+            name="Vendas no período (Loja)",
+            line={"color": "rgba(23, 67, 205, 0.6)"},
+        ),
+        secondary_y=False,
+    )
+    # Estoque da Loja
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_stock.index,
+            y=filtered_data_stock[product],
+            name="Estoque no período (Loja)",
+            line={"color": "rgba(70, 168, 66, 0.6)"},
+        ),
+        secondary_y=True,
+    )
+    # Estoque de Segurança da Loja
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_security_store.index,
+            y=filtered_data_security_store[product],
+            name="Estoque de segurança (Loja)",
+            line={"color": "#d10b04", "dash": "dash"},
+        ),
+        secondary_y=False,
+    )
+    # Estoque de Segurança do CD
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_security_dc.index,
+            y=filtered_data_security_dc[product],
+            name="Estoque de segurança (CD)",
+            line={"color": "#d17000", "dash": "dash"},
+        ),
+        secondary_y=False,
+    )
+    # Estoque de Segurança das lojas abastecidas pelo CD
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_security_dc_stores.index,
+            y=filtered_data_security_dc_stores[product],
+            name="Estoque de segurança (Lojas CD)",
+            line={"color": "#cfc102", "dash": "dash"},
+        ),
+        secondary_y=False,
+    )
+    # Linha y = 0
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_security_dc_stores.index,
+            y=(filtered_data_security_dc_stores[product] * 0),
+            showlegend=False,
+            line_color="rgba(0, 0, 0, 0.0)",
+        ),
+        secondary_y=False,
+    )
+    # Ruptura de Loja
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_loss_store.index,
+            y=(filtered_data_loss_store[product] * max_value),
+            # mode='none',
+            fill="tonexty",
+            fillcolor="rgba(111, 114, 113, 0.2)",
+            name="Ruptura de Loja",
+            line_color="rgba(111, 114, 113, 0.2)",
+        ),
+        secondary_y=False,
+    )
+    # Linha y = 0
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_security_dc_stores.index,
+            y=(filtered_data_security_dc_stores[product] * 0),
+            showlegend=False,
+            line_color="rgba(0, 0, 0, 0.0)",
+        ),
+        secondary_y=False,
+    )
+    # Ruptura de Compra
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_loss_purchase.index,
+            y=(filtered_data_loss_purchase[product] * max_value),
+            # mode='none',
+            fill="tonexty",
+            fillcolor="rgba(26, 189, 185, 0.2)",
+            name="Ruptura de Compra",
+            line_color="rgba(26, 189, 185, 0.2)",
+        ),
+        secondary_y=False,
+    )
+    # Linha y = 0
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_security_dc_stores.index,
+            y=(filtered_data_security_dc_stores[product] * 0),
+            showlegend=False,
+            line_color="rgba(0, 0, 0, 0.0)",
+        ),
+        secondary_y=False,
+    )
+    # Ruptura de Estoque
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data_loss_stock.index,
+            y=(filtered_data_loss_stock[product] * max_value),
+            # mode='none',
+            fill="tonexty",
+            fillcolor="rgba(137, 36, 197, 0.2)",
+            name="Ruptura de Estoque",
+            line_color="rgba(137, 36, 197, 0.2)",
+        ),
+        secondary_y=False,
+    )
     # Nome dos eixos
-    fig.update_yaxes(title_text="Quantidade de vendas")
-    #fig.update_yaxes(title_text="Vendas acumuladas", secondary_y=False)
+    fig.update_yaxes(title_text="Quantidade de vendas", secondary_y=False)
+    fig.update_yaxes(title_text="Quantidade de estoque", secondary_y=True)
 
     # Linha y = 0
-    fig.add_shape(type='line', x0='2018-01-01', y0=0, x1='2021-03-12', y1=0, line={'color': 'rgba(0, 0, 0, 1)'})
+    fig.add_shape(
+        type="line",
+        x0="2018-01-01",
+        y0=0,
+        x1="2021-03-12",
+        y1=0,
+        line={"color": "rgba(0, 0, 0, 1)"},
+    )
     # Cores do gráfico
-    fig.layout.xaxis.gridcolor='rgba(189, 189, 189, 0.5)'
-    fig.layout.yaxis.gridcolor='rgba(189, 189, 189, 0.5)'
-    fig.layout.plot_bgcolor='rgba(255, 255, 255, 1)'
-    
+    fig.layout.xaxis.gridcolor = "rgba(189, 189, 189, 0.5)"
+    fig.layout.yaxis.gridcolor = "rgba(189, 189, 189, 0.5)"
+    fig.layout.plot_bgcolor = "rgba(255, 255, 255, 1)"
+
     return fig
+
 
 def get_indicators_figure(filtered_data, forecast, product, split_date):
     size_train = len(filtered_data[:split_date])
     size_test = len(filtered_data[split_date:])
 
-    mse = mean_squared_error(filtered_data[product][size_train:], forecast['yhat'][size_train:len(filtered_data)])
-    mad = mean_absolute_error(filtered_data[product][size_train:], forecast['yhat'][size_train:len(filtered_data)])
+    mse = mean_squared_error(
+        filtered_data[product][size_train:],
+        forecast["yhat"][size_train : len(filtered_data)],
+    )
+    mad = mean_absolute_error(
+        filtered_data[product][size_train:],
+        forecast["yhat"][size_train : len(filtered_data)],
+    )
 
     fig = go.Figure()
     fig.update_layout(height=120, margin=dict(l=40, r=40, t=40, b=8))
 
-    fig.add_trace(go.Indicator(
-        mode = "number",
-        value = mse,
-        title = {"text": "Erro médio quadrático"},
-        #delta = {'reference': 400, 'relative': True},
-        domain = {'row': 0, 'column': 0}))
+    fig.add_trace(
+        go.Indicator(
+            mode="number",
+            value=mse,
+            title={"text": "Erro médio quadrático"},
+            # delta = {'reference': 400, 'relative': True},
+            domain={"row": 0, "column": 0},
+        )
+    )
 
-    fig.add_trace(go.Indicator(
-        mode = "number",
-        value = mad,
-        #title = {"text": "Erro médio absoluto<br><span style='font-size:0.8em;color:gray'>Subtitle</span><br><span style='font-size:0.8em;color:gray'>Subsubtitle</span>"},
-        title = {'text': 'Erro médio absoluto'},
-        #delta = {'reference': 400, 'relative': True},
-        domain = {'row': 0, 'column': 1}))
+    fig.add_trace(
+        go.Indicator(
+            mode="number",
+            value=mad,
+            # title = {"text": "Erro médio absoluto<br><span style='font-size:0.8em;color:gray'>Subtitle</span><br><span style='font-size:0.8em;color:gray'>Subsubtitle</span>"},
+            title={"text": "Erro médio absoluto"},
+            # delta = {'reference': 400, 'relative': True},
+            domain={"row": 0, "column": 1},
+        )
+    )
 
     fig.update_layout(
-        grid = {'rows': 1, 'columns': 2, 'pattern': "independent"},
-        template = {'data' : {'indicator': [{
-            'title': {'text': "Speed"},
-            'mode' : "number+delta+gauge",
-            'delta' : {'reference': 90}}]
-                             }})
+        grid={"rows": 1, "columns": 2, "pattern": "independent"},
+        template={
+            "data": {
+                "indicator": [
+                    {
+                        "title": {"text": "Speed"},
+                        "mode": "number+delta+gauge",
+                        "delta": {"reference": 90},
+                    }
+                ]
+            }
+        },
+    )
 
     return fig
 
-def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=2021, sales_panel=False, items=None, sales_data=None,  sales_panel_category=None):
+
+def get_list(
+    facts,
+    sort_by="Venda prevista",
+    ascending=False,
+    month=3,
+    year=2021,
+    sales_panel=False,
+    items=None,
+    sales_data=None,
+    sales_panel_category=None,
+):
     previous_year, previous_month = get_previous(year, month)
-    filtered_facts = facts.loc[(facts['Mes'] == month) & (facts['Ano'] == year)]
-    filtered_facts = filtered_facts.sort_values(by=sort_by, ascending=ascending)
+    filtered_facts = facts.loc[
+        (facts["Mes"] == month) & (facts["Ano"] == year)
+    ]
+    filtered_facts = filtered_facts.sort_values(
+        by=sort_by, ascending=ascending
+    )
     child = []
 
     fig = go.Figure()
-    fig.update_layout(height=80, margin=dict(l=40, r=40, t=40, b=8), plot_bgcolor='rgb(255,0,0)')
-    
+    fig.update_layout(
+        height=80,
+        margin=dict(l=40, r=40, t=40, b=8),
+        plot_bgcolor="rgb(255,0,0)",
+    )
+
     titles = ["Vendas no período", "Valor das vendas"]
     n_cols = 2
     if sales_panel is False:
         titles.insert(1, "Estoque")
         titles[0] = "Venda prevista"
         n_cols = 3
-    
+
     # Soma de todas as vendas previstas
-    fig.add_trace(go.Indicator(
-        mode = "number+delta",
-        value = filtered_facts['Venda prevista'].sum(),
-        title = {"text": titles[0]},
-        delta = {'reference': filtered_facts['Venda anterior'].sum(), 'relative': True, 'position': 'right'},
-        domain = {'row': 0, 'column': 0}))
-    
+    fig.add_trace(
+        go.Indicator(
+            mode="number+delta",
+            value=filtered_facts["Venda prevista"].sum(),
+            title={"text": titles[0]},
+            delta={
+                "reference": filtered_facts["Venda anterior"].sum(),
+                "relative": True,
+                "position": "right",
+            },
+            domain={"row": 0, "column": 0},
+        )
+    )
+
     if sales_panel is False:
         # Soma de todos os estoques
-        fig.add_trace(go.Indicator(
-            mode = "number+delta",
-            value = filtered_facts['Estoque atual'].sum(),
-            title = {"text": titles[1]},
-            delta = {'reference': filtered_facts['Estoque anterior'].sum(), 'relative': True, 'position': 'right'},
-            domain = {'row': 0, 'column': 1}))
+        fig.add_trace(
+            go.Indicator(
+                mode="number+delta",
+                value=filtered_facts["Estoque atual"].sum(),
+                title={"text": titles[1]},
+                delta={
+                    "reference": filtered_facts["Estoque anterior"].sum(),
+                    "relative": True,
+                    "position": "right",
+                },
+                domain={"row": 0, "column": 1},
+            )
+        )
         # Soma de todos os valores
-        #fig.add_trace(go.Indicator(
+        # fig.add_trace(go.Indicator(
         #    mode = "number+delta",
         #    value = filtered_facts['Valor venda'].sum(),
         #    title = {"text": titles[2]},
@@ -310,64 +673,126 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
         #    delta = {'reference': filtered_facts['Valor anterior'].sum(), 'relative': True, 'position': 'bottom'},
         #    domain = {'row': 0, 'column': 2}))
         # Cobertura média
-        fig.add_trace(go.Indicator(
-            mode = "number",
-            value = filtered_facts['Cobertura'].median(),
-            title = {"text": "Cobertura"},
-            number = {'suffix': " dias"},
-            domain = {'row': 0, 'column': 2}))
+        fig.add_trace(
+            go.Indicator(
+                mode="number",
+                value=filtered_facts["Cobertura"].median(),
+                title={"text": "Cobertura"},
+                number={"suffix": " dias"},
+                domain={"row": 0, "column": 2},
+            )
+        )
     else:
         # Soma de todos os valores
-        fig.add_trace(go.Indicator(
-            mode = "number+delta",
-            value = 0,
-            title = {"text": titles[1]},
-            number = {'prefix': "R$"},
-            delta = {'reference': 0, 'relative': True, 'position': 'right'},
-            domain = {'row': 0, 'column': 1}))
-            
-    grid = {'rows': 1, 'columns': n_cols, 'pattern': "independent"}
-    template = {'data' : {'indicator': [{'title': {'text': "Speed"}, 'mode' : "number+delta+gauge", 'delta' : {'reference': 90}}]}}
+        fig.add_trace(
+            go.Indicator(
+                mode="number+delta",
+                value=0,
+                title={"text": titles[1]},
+                number={"prefix": "R$"},
+                delta={"reference": 0, "relative": True, "position": "right"},
+                domain={"row": 0, "column": 1},
+            )
+        )
+
+    grid = {"rows": 1, "columns": n_cols, "pattern": "independent"}
+    template = {
+        "data": {
+            "indicator": [
+                {
+                    "title": {"text": "Speed"},
+                    "mode": "number+delta+gauge",
+                    "delta": {"reference": 90},
+                }
+            ]
+        }
+    }
     fig.update_layout(grid=grid, template=template)
 
-    child.append(html.Div(children=[#dcc.Link("    ", href='index', className='link white-bg'),
-                html.Div(children=[
-                    html.Img(src=app.get_asset_url('transparent.png')),
-                    dcc.Graph(id="sales-chart-period-header", config={"displayModeBar": False}, figure=fig),
-                    html.Img(src=app.get_asset_url('transparent.png')),
-                    html.Img(src=app.get_asset_url('transparent.png'))],
-                    className='class-header')
-                ], className="card small-margin"))
+    child.append(
+        html.Div(
+            children=[  # dcc.Link("    ", href='index', className='link white-bg'),
+                html.Div(
+                    children=[
+                        html.Img(src=app.get_asset_url("transparent.png")),
+                        dcc.Graph(
+                            id="sales-chart-period-header",
+                            config={"displayModeBar": False},
+                            figure=fig,
+                        ),
+                        html.Img(src=app.get_asset_url("transparent.png")),
+                        html.Img(src=app.get_asset_url("transparent.png")),
+                    ],
+                    className="class-header",
+                )
+            ],
+            className="card small-margin",
+        )
+    )
 
     if sales_panel is True:
         itr = items
     else:
-        itr = filtered_facts['Categoria'].unique()
-        
+        itr = filtered_facts["Categoria"].unique()
+
     for category in itr:
-        if category == 'teste':
-            continue      
+        if category == "teste":
+            continue
         fig = go.Figure()
-        fig.update_layout(height=80, margin=dict(l=40, r=40, t=8, b=8), plot_bgcolor='#333333')
+        fig.update_layout(
+            height=80,
+            margin=dict(l=40, r=40, t=8, b=8),
+            plot_bgcolor="#333333",
+        )
         if sales_panel is False:
             # Indicador de vendas previstas
-            fig.add_trace(go.Indicator(
-                mode = "number+delta",
-                value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Venda prevista'].values[0],
-                title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-                number = {"font":{"size":32}},
-                delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Venda anterior'].values[0], 'relative': True, 'position': 'right'},
-                domain = {'row': 0, 'column': 0}))
+            fig.add_trace(
+                go.Indicator(
+                    mode="number+delta",
+                    value=filtered_facts.loc[
+                        filtered_facts["Categoria"] == category,
+                        "Venda prevista",
+                    ].values[0],
+                    title={
+                        "text": "<span style='font-size:0.01em;color:gray'></span>"
+                    },
+                    number={"font": {"size": 32}},
+                    delta={
+                        "reference": filtered_facts.loc[
+                            filtered_facts["Categoria"] == category,
+                            "Venda anterior",
+                        ].values[0],
+                        "relative": True,
+                        "position": "right",
+                    },
+                    domain={"row": 0, "column": 0},
+                )
+            )
             # Indicador de estoque
-            fig.add_trace(go.Indicator(
-                mode = "number+delta",
-                value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Estoque atual'].values[0],
-                title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-                number = {"font":{"size":32}},
-                delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Estoque anterior'].values[0], 'relative': True, 'position': 'right'},
-                domain = {'row': 0, 'column': 1}))
+            fig.add_trace(
+                go.Indicator(
+                    mode="number+delta",
+                    value=filtered_facts.loc[
+                        filtered_facts["Categoria"] == category,
+                        "Estoque atual",
+                    ].values[0],
+                    title={
+                        "text": "<span style='font-size:0.01em;color:gray'></span>"
+                    },
+                    number={"font": {"size": 32}},
+                    delta={
+                        "reference": filtered_facts.loc[
+                            filtered_facts["Categoria"] == category,
+                            "Estoque anterior",
+                        ].values[0],
+                        "relative": True,
+                        "position": "right",
+                    },
+                    domain={"row": 0, "column": 1},
+                )
+            )
             # Indicador de valor
-            #fig.add_trace(go.Indicator(
+            # fig.add_trace(go.Indicator(
             #    mode = "number+delta",
             #    value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Valor venda'].values[0],
             #    title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
@@ -375,61 +800,156 @@ def get_list(facts, sort_by='Venda prevista', ascending=False, month=3, year=202
             #    delta = {'reference': filtered_facts.loc[filtered_facts['Categoria']==category, 'Valor anterior'].values[0], 'relative': True, 'position': 'right'},
             #    domain = {'row': 0, 'column': 2}))
             # Indicador de cobertura
-            fig.add_trace(go.Indicator(
-                mode = "number",
-                value = filtered_facts.loc[filtered_facts['Categoria']==category, 'Cobertura'].values[0],
-                title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-                number = {'suffix': " dias", "font":{"size":32}},
-                domain = {'row': 0, 'column': 2}))
-        else: # sales_panel is True
+            fig.add_trace(
+                go.Indicator(
+                    mode="number",
+                    value=filtered_facts.loc[
+                        filtered_facts["Categoria"] == category, "Cobertura"
+                    ].values[0],
+                    title={
+                        "text": "<span style='font-size:0.01em;color:gray'></span>"
+                    },
+                    number={"suffix": " dias", "font": {"size": 32}},
+                    domain={"row": 0, "column": 2},
+                )
+            )
+        else:  # sales_panel is True
             # Indicador de vendas
-            fig.add_trace(go.Indicator(
-                mode = "number+delta",
-                value = sales_data[(sales_data.index.month == month) & (sales_data.index.year == year)][category + "|" + sales_panel_category][0],
-                title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-                number = {"font":{"size":42}},
-                delta = {'reference': sales_data[(sales_data.index.month == previous_month) & (sales_data.index.year == previous_year)][category + "|" + sales_panel_category][0], 'relative': True, 'position': 'right'},
-                domain = {'row': 0, 'column': 0}))
+            fig.add_trace(
+                go.Indicator(
+                    mode="number+delta",
+                    value=sales_data[
+                        (sales_data.index.month == month)
+                        & (sales_data.index.year == year)
+                    ][category + "|" + sales_panel_category][0],
+                    title={
+                        "text": "<span style='font-size:0.01em;color:gray'></span>"
+                    },
+                    number={"font": {"size": 42}},
+                    delta={
+                        "reference": sales_data[
+                            (sales_data.index.month == previous_month)
+                            & (sales_data.index.year == previous_year)
+                        ][category + "|" + sales_panel_category][0],
+                        "relative": True,
+                        "position": "right",
+                    },
+                    domain={"row": 0, "column": 0},
+                )
+            )
             # Indicador de valor
-            fig.add_trace(go.Indicator(
-                mode = "number+delta",
-                value = 0,
-                title = {"text": "<span style='font-size:0.01em;color:gray'></span>"},
-                number = {'prefix': "R$", "font":{"size":42}},
-                delta = {'reference': 0, 'relative': True, 'position': 'right'},
-                domain = {'row': 0, 'column': 1}))
-                
+            fig.add_trace(
+                go.Indicator(
+                    mode="number+delta",
+                    value=0,
+                    title={
+                        "text": "<span style='font-size:0.01em;color:gray'></span>"
+                    },
+                    number={"prefix": "R$", "font": {"size": 42}},
+                    delta={
+                        "reference": 0,
+                        "relative": True,
+                        "position": "right",
+                    },
+                    domain={"row": 0, "column": 1},
+                )
+            )
+
         fig.update_layout(grid=grid, template=template)
 
         if sales_panel is False:
-            child.append(html.Div(children=[
-                dcc.Link("    " + category, href=category.replace(' ', '_'), className='link white-bg'),
-                html.Div(children=[
-                    html.Img(src=app.get_asset_url('categorias/' + category + '.png')),
-                    dcc.Graph(id="sales-chart-period-" + category, config={"displayModeBar": False}, figure=fig),
-                    #html.Img(src=app.get_asset_url('graficos.png'), className='yellow-bg'),
-                    html.A(
-                        children=[
-                            html.Img(src=app.get_asset_url('graficos.png'), className='yellow-bg'),
-                        ], href='/apps/app3' + category.replace(' ', '_'), style = {'width':'60px', 'height':'60px', 'margin-right': '16px'}
-                    ),
-                    html.A(
-                        children=[
-                            html.Img(src=app.get_asset_url('relatorio.png'), className='yellow-bg'),
-                        ], href='/apps/app5' + category.replace(' ', '_'), style = {'width':'60px', 'height':'60px', 'margin-right': '16px'}
-                    )],
-                    className='class-header')
-                ], className="card small-margin"))
+            child.append(
+                html.Div(
+                    children=[
+                        dcc.Link(
+                            "    " + category,
+                            href=category.replace(" ", "_"),
+                            className="link white-bg",
+                        ),
+                        html.Div(
+                            children=[
+                                html.Img(
+                                    src=app.get_asset_url(
+                                        "categorias/" + category + ".png"
+                                    )
+                                ),
+                                dcc.Graph(
+                                    id="sales-chart-period-" + category,
+                                    config={"displayModeBar": False},
+                                    figure=fig,
+                                ),
+                                # html.Img(src=app.get_asset_url('graficos.png'), className='yellow-bg'),
+                                html.A(
+                                    children=[
+                                        html.Img(
+                                            src=app.get_asset_url(
+                                                "graficos.png"
+                                            ),
+                                            className="yellow-bg",
+                                        ),
+                                    ],
+                                    href="/apps/app3"
+                                    + category.replace(" ", "_"),
+                                    style={
+                                        "width": "60px",
+                                        "height": "60px",
+                                        "margin-right": "16px",
+                                    },
+                                ),
+                                html.A(
+                                    children=[
+                                        html.Img(
+                                            src=app.get_asset_url(
+                                                "relatorio.png"
+                                            ),
+                                            className="yellow-bg",
+                                        ),
+                                    ],
+                                    href="/apps/app5"
+                                    + category.replace(" ", "_"),
+                                    style={
+                                        "width": "60px",
+                                        "height": "60px",
+                                        "margin-right": "16px",
+                                    },
+                                ),
+                            ],
+                            className="class-header",
+                        ),
+                    ],
+                    className="card small-margin",
+                )
+            )
         else:
-            child.append(html.Div(children=[
-                dcc.Link("    " + category, href='index', className='link white-bg'),
-                html.Div(children=[
-                    dcc.Graph(id="sales-chart-period-" + category, config={"displayModeBar": False}, figure=fig),
-                    html.Img(src=app.get_asset_url('relatorio.png'), className='yellow-bg')],
-                    className='class-header')
-                ], className="card small-margin"))
+            child.append(
+                html.Div(
+                    children=[
+                        dcc.Link(
+                            "    " + category,
+                            href="index",
+                            className="link white-bg",
+                        ),
+                        html.Div(
+                            children=[
+                                dcc.Graph(
+                                    id="sales-chart-period-" + category,
+                                    config={"displayModeBar": False},
+                                    figure=fig,
+                                ),
+                                html.Img(
+                                    src=app.get_asset_url("relatorio.png"),
+                                    className="yellow-bg",
+                                ),
+                            ],
+                            className="class-header",
+                        ),
+                    ],
+                    className="card small-margin",
+                )
+            )
 
     return child
+
 
 def get_previous(year, month):
     if month > 1:
@@ -444,95 +964,257 @@ def get_previous(year, month):
 
     return previous_year, previous_month
 
-def get_top_list(data, category_products, month=3, year=2021, top=5, sales_panel=False, ascending=False):
+
+def get_top_list(
+    data,
+    category_products,
+    month=3,
+    year=2021,
+    top=5,
+    sales_panel=False,
+    ascending=False,
+):
     filtered_data = data[category_products]
     filtered_data.index = pd.to_datetime(filtered_data.index)
-    filtered_data = filtered_data.loc[(data.index.month == month) & (data.index.year == year)]
+    filtered_data = filtered_data.loc[
+        (data.index.month == month) & (data.index.year == year)
+    ]
 
     num = top
-    if(len(category_products) < num): # Em algumas categorias o número de produtos pertencentes é menor que 5
+    if (
+        len(category_products) < num
+    ):  # Em algumas categorias o número de produtos pertencentes é menor que 5
         top_series = filtered_data.sum().sort_values(ascending=ascending)
         num = len(category_products)
     else:
         top_series = filtered_data.sum().sort_values(ascending=ascending)[:num]
-        
+
     if sales_panel is True:
-        top_df = pd.DataFrame({'Produto': top_series.index, 'Qtd. vendida': top_series.values}, index=range(1, num+1))
+        top_df = pd.DataFrame(
+            {"Produto": top_series.index, "Qtd. vendida": top_series.values},
+            index=range(1, num + 1),
+        )
 
         previous_year, previous_month = get_previous(year, month)
-        prev_sales = data.loc[(data.index.month == previous_month) & (data.index.year == previous_year), top_df['Produto'].unique()].sum().values
+        prev_sales = (
+            data.loc[
+                (data.index.month == previous_month)
+                & (data.index.year == previous_year),
+                top_df["Produto"].unique(),
+            ]
+            .sum()
+            .values
+        )
 
-        top_df['Variação'] = (top_df['Qtd. vendida']- prev_sales) / prev_sales * 100
+        top_df["Variação"] = (
+            (top_df["Qtd. vendida"] - prev_sales) / prev_sales * 100
+        )
         top_df.fillna(value=0, inplace=True)
-        top_df['Variação'] = top_df['Variação'].apply(lambda x : "{:3.2f}%".format(x))
-        top_df['Qtd. vendida'] = top_df['Qtd. vendida'].apply(lambda x : "{:5d}".format(int(x)))
-        top_df['Produto'] = top_df['Produto'].apply(lambda x : x if len(x) < 30 else '{}...'.format(x[:30]))
-        #top_df['Valor'] = '0'
+        top_df["Variação"] = top_df["Variação"].apply(
+            lambda x: "{:3.2f}%".format(x)
+        )
+        top_df["Qtd. vendida"] = top_df["Qtd. vendida"].apply(
+            lambda x: "{:5d}".format(int(x))
+        )
+        top_df["Produto"] = top_df["Produto"].apply(
+            lambda x: x if len(x) < 30 else "{}...".format(x[:30])
+        )
+        # top_df['Valor'] = '0'
         return top_df
 
-    return  pd.DataFrame({'Produto': top_series.index, 'Qtd. vendida': top_series.values}, index=range(1, num+1))
-    
-def draw_top_list(data, category_products, month=3, year=2021, top=5, sales_panel=False, ascending=False):
-    top_df = get_top_list(data, category_products, month, year, top, sales_panel, ascending)
+    return pd.DataFrame(
+        {"Produto": top_series.index, "Qtd. vendida": top_series.values},
+        index=range(1, num + 1),
+    )
 
-    return DataTable(id='top-table',
-                    columns=[{'name': column, 'id': column} for column in top_df.columns],
-                    data=top_df.to_dict('records'),
-                    style_as_list_view=True,
-                    style_data={
-                        'textAlign': 'center',
-                        'whiteSpace': 'normal',
-                        'width': '100%',
-                        'overflowY': 'auto',
-                        'fontFamily': 'Avenir',
-                        'fontSize': '16px',
-                        'padding': '12px'
-                    },
-                    style_header={
-                        'backgroundColor': 'rgb(230, 230, 230)',
-                        'textAlign': 'center',
-                        'fontFamily': 'Avenir',
-                        'fontSize': '16px',
-                        'padding': '12px'
-                    },
-                    style_data_conditional=[{
-                        'if': {'row_index': 'odd'},
-                        'backgroundColor': 'rgb(248, 248, 248)'
-                    }])
-    
-def get_general_panel(data, data_loss, month=3, year=2021, category='GERAL', products=None):
+
+def draw_top_list(
+    data,
+    category_products,
+    month=3,
+    year=2021,
+    top=5,
+    sales_panel=False,
+    ascending=False,
+):
+    top_df = get_top_list(
+        data, category_products, month, year, top, sales_panel, ascending
+    )
+
+    return DataTable(
+        id="top-table",
+        columns=[{"name": column, "id": column} for column in top_df.columns],
+        data=top_df.to_dict("records"),
+        style_as_list_view=True,
+        style_data={
+            "textAlign": "center",
+            "whiteSpace": "normal",
+            "width": "100%",
+            "overflowY": "auto",
+            "fontFamily": "Avenir",
+            "fontSize": "16px",
+            "padding": "12px",
+        },
+        style_header={
+            "backgroundColor": "rgb(230, 230, 230)",
+            "textAlign": "center",
+            "fontFamily": "Avenir",
+            "fontSize": "16px",
+            "padding": "12px",
+        },
+        style_data_conditional=[
+            {
+                "if": {"row_index": "odd"},
+                "backgroundColor": "rgb(248, 248, 248)",
+            }
+        ],
+    )
+
+
+def get_general_panel(
+    data, data_loss, month=3, year=2021, category="GERAL", products=None
+):
     previous_year, previous_month = get_previous(year, month)
 
     fig = go.Figure()
-    grid = {'rows': 2, 'columns': 1, 'pattern': "independent"}
-    fig.update_layout(grid=grid, height=372, width=400, margin=dict(l=40, r=40, t=20, b=0))
+    grid = {"rows": 2, "columns": 1, "pattern": "independent"}
+    fig.update_layout(
+        grid=grid, height=372, width=400, margin=dict(l=40, r=40, t=20, b=0)
+    )
     # Produtos vendidos no mês
-    fig.add_trace(go.Indicator(
-        mode = "number+delta",
-        value = data.loc[(data.index.month == month) & (data.index.year == year), category][0],
-        title = {"text": 'Produtos vendidos no mês'},
-        delta = {'reference': data.loc[(data.index.month == previous_month) & (data.index.year == previous_year), category][0], 'relative': True, 'position': 'right'},
-        domain = {'row': 0, 'column': 0}))
+    fig.add_trace(
+        go.Indicator(
+            mode="number+delta",
+            value=data.loc[
+                (data.index.month == month) & (data.index.year == year),
+                category,
+            ][0],
+            title={"text": "Produtos vendidos no mês"},
+            delta={
+                "reference": data.loc[
+                    (data.index.month == previous_month)
+                    & (data.index.year == previous_year),
+                    category,
+                ][0],
+                "relative": True,
+                "position": "right",
+            },
+            domain={"row": 0, "column": 0},
+        )
+    )
     # Vendas perdidas por ruptura de estoque
-    fig.add_trace(go.Indicator(
-        mode = "number+delta",
-        value = data_loss.loc[(data_loss.index.month == month) & (data_loss.index.year == year), category][0],
-        title = {"text": 'Vendas perdidas <br> por ruptura de estoque'},
-        delta = {'reference': data_loss.loc[(data_loss.index.month == previous_month) & (data_loss.index.year == previous_year), category][0], 'relative': True, 'position': 'right'},
-        domain = {'row': 1, 'column': 0}))
+    fig.add_trace(
+        go.Indicator(
+            mode="number+delta",
+            value=data_loss.loc[
+                (data_loss.index.month == month)
+                & (data_loss.index.year == year),
+                category,
+            ][0],
+            title={"text": "Vendas perdidas <br> por ruptura de estoque"},
+            delta={
+                "reference": data_loss.loc[
+                    (data_loss.index.month == previous_month)
+                    & (data_loss.index.year == previous_year),
+                    category,
+                ][0],
+                "relative": True,
+                "position": "right",
+            },
+            domain={"row": 1, "column": 0},
+        )
+    )
 
     highlight_index = (month - 1) + 12 * (year - 2018)
 
-    return [html.Div(children=[
-                    html.Div(children=dcc.Graph(id="sales-panel-chart", config={"displayModeBar": False}, figure=get_sales_figure(data, category, True, highlight_index)), 
-                        className='right', 
-                        style={'border-left-width': '24px', 'border-top-width': '0'}),
-                    html.Div(children=dcc.Graph(id="sales-panel-indicators", config={"displayModeBar": False}, figure=fig), 
-                        className='left', 
-                        style={'display': 'flex', 'justify-content': 'center', 'align-items': 'center', 'border-top-width': '0'})],
-                    style={'background-color': 'white', 'width': '100%', 'height': '450px'}),
-            # Lista de mais vendidos e menos vendidos
-            html.Div(children=[
-                    html.Div(children=[html.P('Mais vendidos', className='header-description'), draw_top_list(data, products, sales_panel=True, month=month, year=year)], className='left', style={'background-color': 'white', 'width': '50%', 'border-top-width': '0'}),
-                    html.Div(children=[html.P('Maiores perdas por ruptura', className='header-description'), draw_top_list(data_loss, products, sales_panel=True, month=month, year=year)], className='right', style={'background-color': 'white', 'width': '50%', 'border-left-width': '24px', 'border-top-width': '0'})],
-                    style={'background-color': 'white', 'width': '100%', 'height': '343px'})]
+    return [
+        html.Div(
+            children=[
+                html.Div(
+                    children=dcc.Graph(
+                        id="sales-panel-chart",
+                        config={"displayModeBar": False},
+                        figure=get_sales_figure(
+                            data, category, True, highlight_index
+                        ),
+                    ),
+                    className="right",
+                    style={
+                        "border-left-width": "24px",
+                        "border-top-width": "0",
+                    },
+                ),
+                html.Div(
+                    children=dcc.Graph(
+                        id="sales-panel-indicators",
+                        config={"displayModeBar": False},
+                        figure=fig,
+                    ),
+                    className="left",
+                    style={
+                        "display": "flex",
+                        "justify-content": "center",
+                        "align-items": "center",
+                        "border-top-width": "0",
+                    },
+                ),
+            ],
+            style={
+                "background-color": "white",
+                "width": "100%",
+                "height": "450px",
+            },
+        ),
+        # Lista de mais vendidos e menos vendidos
+        html.Div(
+            children=[
+                html.Div(
+                    children=[
+                        html.P(
+                            "Mais vendidos", className="header-description"
+                        ),
+                        draw_top_list(
+                            data,
+                            products,
+                            sales_panel=True,
+                            month=month,
+                            year=year,
+                        ),
+                    ],
+                    className="left",
+                    style={
+                        "background-color": "white",
+                        "width": "50%",
+                        "border-top-width": "0",
+                    },
+                ),
+                html.Div(
+                    children=[
+                        html.P(
+                            "Maiores perdas por ruptura",
+                            className="header-description",
+                        ),
+                        draw_top_list(
+                            data_loss,
+                            products,
+                            sales_panel=True,
+                            month=month,
+                            year=year,
+                        ),
+                    ],
+                    className="right",
+                    style={
+                        "background-color": "white",
+                        "width": "50%",
+                        "border-left-width": "24px",
+                        "border-top-width": "0",
+                    },
+                ),
+            ],
+            style={
+                "background-color": "white",
+                "width": "100%",
+                "height": "343px",
+            },
+        ),
+    ]
