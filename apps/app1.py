@@ -47,6 +47,8 @@ data_m = data_d.resample("M").sum()
 data_stock = read_data("previsao/estoque2.csv")
 # Dados de ruptura
 data_loss = read_data("previsao/ruptura_geral.csv")
+# Dados de ruptura (mensal)
+data_loss_m = data_loss.resample("M").sum()
 # Ruptura versão 2 WIP
 # Para efeitos de teste, trabalharemos no momento com os dados da loja da lagoa
 # Vendas da Loja
