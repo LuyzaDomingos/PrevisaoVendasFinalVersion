@@ -1218,3 +1218,43 @@ def get_general_panel(
             },
         ),
     ]
+
+
+def create_loss_table(
+    dc_name,
+    store_name,
+    category,
+    product,
+    df_sales,
+    df_stock,
+    security_store,
+    security_dc,
+    security_dc_stores,
+    data_loss_purchase,
+    data_loss_store,
+    data_loss_stock,
+):
+    table = pd.DataFrame(df_sales.index, columns=["Data"])
+
+    table["Dia"] = table["Data"].dt.day
+    table["Mes"] = table["Data"].dt.month
+    table["Ano"] = table["Data"].dt.year
+
+    table["CD Responsável"] = dc_name
+    table["Loja"] = store_name
+    table["Categoria"] = category
+    table["Produto"] = product
+
+    table["Vendas Loja"] = df_sales[product].values
+    table["Estoque Loja"] = df_stock[product].values
+    table["Estoque de Segurança Loja"] = security_store[product].values
+    table["Estoque de Segurança CD"] = security_dc[product].values
+    table["Estoque de Segurança Lojas CD"] = security_dc_stores[product].values
+
+    table["Ruptura de Compra"] = data_loss_purchase[product].values
+    table["Ruptura de Loja"] = data_loss_store[product].values
+    table["Ruptura de Estoque"] = data_loss_stock[product].values
+
+    table.drop(columns=["Data"], inplace=True)
+
+    return table
