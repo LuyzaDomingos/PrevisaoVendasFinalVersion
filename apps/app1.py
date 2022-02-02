@@ -8,7 +8,7 @@ import dash_html_components as html
 # Dependências do Dash
 from dash.dependencies import Input, Output
 from dash_extensions import Download
-from dash_extensions.snippets import send_data_frame
+from dash_extensions.snippets import send_data_frame, send_bytes
 from dash import no_update, callback_context
 
 # API de previsão de séries temporais
@@ -22,6 +22,7 @@ from util import (
     get_stocks_figure,
     get_sales_loss_figure,
     heroku,
+    create_loss_table,
 )
 
 from app import app
@@ -114,8 +115,10 @@ layout = html.Div(
                 dcc.Link(
                     "Voltar à página inicial", href="index", className="link"
                 ),
-                # html.Button("Baixe a previsão (.csv)", id="bt-download", className="bt"),
-                # Download(id="download"),
+                html.Button(
+                    "Baixe os dados", id="bt-download", className="bt"
+                ),
+                Download(id="download-loss"),
             ],
             className="header",
         ),
@@ -430,3 +433,44 @@ def update_charts(
             )
         else:
             return no_update, no_update, no_update
+
+
+# Callback de download
+@app.callback(
+    Output("download-loss", "data"),
+    [
+        Input("bt-download", "n_clicks"),
+        Input("category-filter", "value"),
+        Input("product-filter", "value"),
+    ],
+)
+def download_forecast(n_clicks, category, product):
+    loss_table = create_loss_table(
+        "CBO",
+        "LAGOA",
+        category,
+        product,
+        df_sales,
+        df_stock,
+        security_store,
+        security_dc,
+        security_dc_stores,
+        data_loss_purchase,
+        data_loss_store,
+        data_loss_stock,
+    )
+
+    def to_xlsx(bytes):
+        writer = pd.ExcelWriter(bytes, engine="xlsxwriter")
+        loss_table.to_excel(writer, index=False, sheet_name="Ruptura")
+        writer.save()
+
+    if n_clicks is None:
+        return no_update
+
+    return send_bytes(
+        to_xlsx,
+        filename="RUPTURA_{}@{}.xlsx".format(
+            product.replace(" ", "_"), "LAGOA"
+        ),
+    )
