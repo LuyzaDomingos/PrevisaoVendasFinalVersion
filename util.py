@@ -1259,25 +1259,31 @@ def create_loss_table(
 
     return table
 
-def get_product_loss_indicators(product, filtered_data_loss_purchase,
-                    filtered_data_loss_store,
-                    filtered_data_loss_stock):
+
+def get_product_loss_indicators(
+    product,
+    filtered_data_loss_purchase,
+    filtered_data_loss_store,
+    filtered_data_loss_stock,
+):
 
     fig = go.Figure()
     fig.update_layout(
         height=80,
         margin=dict(l=40, r=40, t=40, b=8),
         plot_bgcolor="rgb(255,0,0)",
-        grid = {"rows": 1, "columns": 3, "pattern": "independent"},
+        grid={"rows": 1, "columns": 3, "pattern": "independent"},
     )
 
     # Contagem dos dias em que houveram ruptura de loja
     fig.add_trace(
         go.Indicator(
             mode="number",
-            value=len(filtered_data_loss_store[filtered_data_loss_store[product] > 0]),
-            title={"text": 'Ruptura de Loja'},
-            number = {'suffix': " dias"},
+            value=len(
+                filtered_data_loss_store[filtered_data_loss_store[product] > 0]
+            ),
+            title={"text": "Ruptura de Loja"},
+            number={"suffix": " dias"},
             domain={"row": 0, "column": 0},
         )
     )
@@ -1285,9 +1291,13 @@ def get_product_loss_indicators(product, filtered_data_loss_purchase,
     fig.add_trace(
         go.Indicator(
             mode="number",
-            value=len(filtered_data_loss_purchase[filtered_data_loss_purchase[product] > 0]),
-            title={"text": 'Ruptura de Compra'},
-            number = {'suffix': " dias"},
+            value=len(
+                filtered_data_loss_purchase[
+                    filtered_data_loss_purchase[product] > 0
+                ]
+            ),
+            title={"text": "Ruptura de Compra"},
+            number={"suffix": " dias"},
             domain={"row": 0, "column": 1},
         )
     )
@@ -1295,9 +1305,11 @@ def get_product_loss_indicators(product, filtered_data_loss_purchase,
     fig.add_trace(
         go.Indicator(
             mode="number",
-            value=len(filtered_data_loss_stock[filtered_data_loss_stock[product] > 0]),
-            title={"text": 'Ruptura de Estoque'},
-            number = {'suffix': " dias"},
+            value=len(
+                filtered_data_loss_stock[filtered_data_loss_stock[product] > 0]
+            ),
+            title={"text": "Ruptura de Estoque"},
+            number={"suffix": " dias"},
             domain={"row": 0, "column": 2},
         )
     )
