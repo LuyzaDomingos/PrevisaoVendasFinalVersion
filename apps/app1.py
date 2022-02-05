@@ -23,6 +23,7 @@ from util import (
     get_sales_loss_figure,
     heroku,
     create_loss_table,
+    get_product_loss_indicators,
 )
 
 from app import app
@@ -209,12 +210,12 @@ layout = html.Div(
             ),
             className="wrapperSecond",
         ),
-        # html.Div(
-        # children=dcc.Graph(
-        # id="indicators-chart", config={"displayModeBar": False}
-        # ),
-        # className="wrapperSecond",
-        # ),
+        html.Div(
+            children=dcc.Graph(
+                id="indicators-chart", config={"displayModeBar": False}
+            ),
+            className="wrapperSecond",
+        ),
     ]
 )
 
@@ -285,7 +286,9 @@ def update_products(category):
         Output("sales-chart-period", "figure"),
         Output("forecast-chart", "figure"),
         Output("bt-memory-pred", "data"),
-    ],  # Output("indicators-chart", "figure")
+        Output("indicators-chart", "style"),
+        Output("indicators-chart", "figure"),
+    ],
     [
         Input("product-filter", "value"),
         Input("frequency-selector", "value"),
@@ -328,6 +331,8 @@ def update_charts(
                 filtered_data, product, "2021-03-16", frequency
             ),
             no_update,
+            {"display": "none"},
+            no_update,
         )
 
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
@@ -339,6 +344,8 @@ def update_charts(
                 filtered_data, product, "2021-03-16", frequency
             ),
             "bt-sales",
+            {"display": "none"},
+            no_update,
         )
     elif button_id == "bt-stock":  # O botão selecionado é o de estoque
         # mask = (
@@ -379,6 +386,13 @@ def update_charts(
                 freq=frequency,
             ),
             "bt-stock",
+            {"display": "inline"},
+            get_product_loss_indicators(
+                product,
+                filtered_data_loss_purchase,
+                filtered_data_loss_store,
+                filtered_data_loss_stock,
+            ),
         )
     else:  # O callback não foi gerado por um botão
         if memory == "bt-sales":
@@ -387,6 +401,8 @@ def update_charts(
                 get_forecast_figure(
                     filtered_data, product, "2021-03-16", frequency
                 ),
+                no_update,
+                {"display": "none"},
                 no_update,
             )
         elif memory == "bt-stock":
@@ -430,9 +446,16 @@ def update_charts(
                     freq=frequency,
                 ),
                 no_update,
+                {"display": "inline"},
+                get_product_loss_indicators(
+                    product,
+                    filtered_data_loss_purchase,
+                    filtered_data_loss_store,
+                    filtered_data_loss_stock,
+                ),
             )
         else:
-            return no_update, no_update, no_update
+            return no_update, no_update, no_update, no_update, no_update
 
 
 # Callback de download
