@@ -3,7 +3,7 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 
 from app import app
-from apps import app1, app2, app3, app4, app5
+from apps import app1, app2, app3, app4, app5, app6
 
 app.layout = html.Div(
     [dcc.Location(id="url", refresh=False), html.Div(id="page-content")]
@@ -75,6 +75,19 @@ index_page = html.Div(
                         ),  # style = {'color': 'gray'}
                     ],
                     href="/apps/app4",
+                    className="column",
+                ),
+                html.A(
+                    children=[
+                        html.Img(
+                            src=app.get_asset_url("config.png"),
+                            style={"width": "100px", "height": "100px"},
+                        ),
+                        html.P(
+                            "Configurações", className="secondlink"
+                        ),  # style = {'color': 'gray'}
+                    ],
+                    href="/apps/app6",
                     className="column",
                 ),
             ],
@@ -150,6 +163,8 @@ def display_page(pathname):
         return app3.get_layout()
     elif pathname == "/apps/app4":
         return app4.layout
+    elif pathname == "/apps/app6":
+        return app6.layout
     # Pathname usado para dar o panorama da categoria correspondente
     elif pathname in categories_paths_3:
         return app3.get_layout(pathname[10:].replace("_", " "))
@@ -161,4 +176,4 @@ def display_page(pathname):
 
 if __name__ == "__main__":
     app.run_server(host="0.0.0.0", debug=False)
-    # app.run_server(host='127.0.0.1', debug=True)
+    # app.run_server(host="127.0.0.1", debug=True)
