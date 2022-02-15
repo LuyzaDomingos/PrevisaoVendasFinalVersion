@@ -4,9 +4,10 @@ import pandas as pd
 
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_bootstrap_components as dbc
 
 # Dependências do Dash
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from dash import no_update, callback_context
 from dash_table import DataTable
 
@@ -21,31 +22,47 @@ store_selector_dropdown = dcc.Dropdown(
     className="dropdown",
 )
 
-bt_save = html.Button(
-                        "Salvar",
-                        id="bt-save-active",
-                        n_clicks=0,
-                        className="flex-item",
-                        style={"width": "180px", "backgroundColor": "rgb(255, 255, 255)"},
-                    )    
+bt_save = html.Div(
+    [
+        dbc.Button(
+            "Salvar",
+            id="bt-save-active",
+            n_clicks=0,
+            className="flex-item",
+            style={"width": "180px", "backgroundColor": "rgb(255, 255, 255)"},
+        ),
+        dbc.Modal(
+            [
+                dbc.ModalBody("Alterações salvas"),
+            ],
+            id="modal-save",
+            size="sm",
+            is_open=False,
+        ),
+    ]
+)
+
 
 def get_table(search=None):
     active = json.load(open("previsao/ativo.json"))
 
-    products = active['0'] + active['1']
+    products = active["0"] + active["1"]
 
     active_t = {}
     for product in products:
-        if product in active['0']: 
-            active_t[product] = 'Não'
+        if product in active["0"]:
+            active_t[product] = "Não"
         else:
-            active_t[product] = 'Sim'
+            active_t[product] = "Sim"
 
-    active_df = pd.DataFrame(active_t.items(), columns=['Produto', 'Ativo'])
+    active_df = pd.DataFrame(active_t.items(), columns=["Produto", "Ativo"])
 
     return DataTable(
         id="product-table",
-        columns=[{"name": 'Produto', "id": 'Produto', "editable": False}, {"name": 'Ativo', "id": 'Ativo', "editable": True}],
+        columns=[
+            {"name": "Produto", "id": "Produto", "editable": False},
+            {"name": "Ativo", "id": "Ativo", "editable": True},
+        ],
         data=active_df.to_dict("records"),
         style_as_list_view=True,
         filter_action="native",
@@ -53,8 +70,8 @@ def get_table(search=None):
         sort_action="native",
         sort_mode="multi",
         page_action="native",
-        page_current= 0,
-        page_size= 15,
+        page_current=0,
+        page_size=15,
         style_data={
             "textAlign": "center",
             "whiteSpace": "normal",
@@ -77,16 +94,17 @@ def get_table(search=None):
             },
         ],
         style_cell_conditional=[
-            {   'if': {'column_id': 'Ativo'},
-                'width': '30%'
-            },
-        ]
+            {"if": {"column_id": "Ativo"}, "width": "30%"},
+        ],
     )
+
 
 layout = html.Div(
     children=[
         dcc.Store(
-            id="bt-memory-settings", storage_type="memory", data="bt-product-active"
+            id="bt-memory-settings",
+            storage_type="memory",
+            data="bt-product-active",
         ),
         html.Div(
             children=[
@@ -115,7 +133,9 @@ layout = html.Div(
                     ],
                     className="flex-container center",
                 ),
-                dcc.Link("Voltar à página inicial", href="index", className="link"),
+                dcc.Link(
+                    "Voltar à página inicial", href="index", className="link"
+                ),
             ],
             className="header",
         ),
@@ -149,7 +169,9 @@ def set_active(*args):
     ctx = callback_context
 
     if not ctx.triggered or not any(args):
-        return ["flex-item" if x > 0 else "flex-item selected" for x in range(2)]
+        return [
+            "flex-item" if x > 0 else "flex-item selected" for x in range(2)
+        ]
 
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
@@ -201,30 +223,28 @@ def update_list(*args):
 
     return no_update, no_update, no_update, no_update
 
+
 @app.callback(
-    [
-        Output("bt-save-active", "n_clicks"),
-    ],
-    [
-        Input("bt-save-active", "n_clicks"),
-        Input("product-table", "data")
-    ],
+    Output("modal-save", "is_open"),
+    [Input("bt-save-active", "n_clicks"), Input("product-table", "data")],
+    [State("modal-save", "is_open")],
 )
-def save_active(*args):
-    ctx = callback_context
-    if not ctx.triggered or not any(
-        args
-    ):
-        return no_update
-        
-    df_to_dict = {'0': [], '1': []}
-    for row in args[1]:
-        if (row['Ativo'] == 'Nao' or row['Ativo'] == 'Não' or row['Ativo'] == '0'):
-            df_to_dict['0'].append(row['Produto'])
+def save_active(bt_open, data, is_open):
+    if bt_open:
+        return not is_open
+
+    df_to_dict = {"0": [], "1": []}
+    for row in data:
+        if (
+            row["Ativo"] == "Nao"
+            or row["Ativo"] == "Não"
+            or row["Ativo"] == "0"
+        ):
+            df_to_dict["0"].append(row["Produto"])
         else:
-            df_to_dict['1'].append(row['Produto'])
-    
-    with open("previsao/ativo.json", 'w') as fout:
+            df_to_dict["1"].append(row["Produto"])
+
+    with open("previsao/ativo.json", "w") as fout:
         json.dump(df_to_dict, fout)  # Salvar o dicionário
 
-    return no_update
+    return is_open
