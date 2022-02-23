@@ -1,6 +1,7 @@
 # Aplicativo 6 (Configurações)
 import json
 import pandas as pd
+import os
 
 import dash_core_components as dcc
 import dash_html_components as html
@@ -14,9 +15,12 @@ from dash_table import DataTable
 from app import app
 from apps import app4
 
+stores = [f.split('_2.csv')[0] for f in os.listdir('data/Vendas') if f.endswith('_2.csv')]
+stores.insert(0, 'Nenhuma')
+
 store_selector_dropdown = dcc.Dropdown(
     id="store-selector",
-    options=[{"label": store, "value": store} for store in app4.stores],
+    options=[{"label": store, "value": store} for store in stores],
     value="Alagoa Grande",
     clearable=False,
     className="dropdown",
@@ -42,6 +46,25 @@ bt_save = html.Div(
     ]
 )
 
+bt_select = html.Div(
+    [
+        dbc.Button(
+            "Selecionar Loja",
+            id="bt-select-active",
+            n_clicks=0,
+            className="flex-item",
+            style={"width": "180px", "backgroundColor": "rgb(255, 255, 255)"},
+        ),
+        dbc.Modal(
+            [
+                dbc.ModalBody("Loja selecionada"),
+            ],
+            id="modal-select",
+            size="sm",
+            is_open=False,
+        ),
+    ]
+)
 
 def get_table(search=None):
     active = json.load(open("previsao/ativo.json"))
@@ -214,12 +237,12 @@ def update_list(*args):
     if button_id == "bt-product-active":
         return [bt_save], get_table(), no_update, "bt-product-active"
     if button_id == "bt-select-store":
-        return [store_selector_dropdown], None, no_update, "bt-select-store"
+        return [store_selector_dropdown, bt_select], None, no_update, "bt-select-store"
     else:  # O input que causou o callback não foi um botão
         if args[2] == "bt-product-active":
             return [bt_save], get_table(), no_update, "bt-product-active"
         if args[2] == "bt-select-store":
-            return [store_selector_dropdown], None, "bt-select-store"
+            return [store_selector_dropdown, bt_select], None, "bt-select-store"
 
     return no_update, no_update, no_update, no_update
 
@@ -248,3 +271,15 @@ def save_active(bt_open, data, is_open):
         json.dump(df_to_dict, fout)  # Salvar o dicionário
 
     return is_open
+
+#@app.callback(Output('store-selected', 'data'),
+#              [Input('store-selector', 'value')])
+@app.callback(
+    [Output("modal-select", "is_open"), Output("store-selected", "data")],
+    [Input("bt-select-active", "n_clicks"), Input("store-selector", "value")],
+    [State("modal-select", "is_open")],
+)
+def q1_value(bt_select, store_selected, is_open):
+    if bt_select: return not is_open, no_update
+    return is_open, {'store_selected': store_selected}
+

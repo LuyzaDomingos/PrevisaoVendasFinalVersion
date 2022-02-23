@@ -1,3 +1,4 @@
+# Aplicativo 3 (Panorama de categorias)
 import pandas as pd
 
 import dash_core_components as dcc

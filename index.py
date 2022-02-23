@@ -1,12 +1,16 @@
 import dash_core_components as dcc
 import dash_html_components as html
+
 from dash.dependencies import Input, Output
 
-from app import app
+from app import app, VERSION
 from apps import app1, app2, app3, app4, app5, app6
 
-app.layout = html.Div(
-    [dcc.Location(id="url", refresh=False), html.Div(id="page-content")]
+app.layout = html.Div(children=[
+        dcc.Store(id='store-selected', storage_type='session', data={'store_selected': 'Nenhuma'}),
+        dcc.Location(id="url", refresh=False), 
+        html.Div(id="page-content"),
+    ]
 )
 
 index_page = html.Div(
@@ -21,6 +25,7 @@ index_page = html.Div(
                     children="Visualização e previsão de séries temporais referentes à vendas de produtos",
                     className="header-description",
                 ),
+                html.P(id="store_selected_p", children="", className="header-description"),
                 # html.Img(src=app.get_asset_url('previsao.png'),className = 'link'),
                 # dcc.Link('Previsão por Produtos', href='/apps/app1',className='link'),
                 # dcc.Link('Previsão por Categorias', href='/apps/app2',className='link'),
@@ -99,6 +104,11 @@ index_page = html.Div(
                 "padding-top": "50px",
             },
         ),
+        html.Footer(
+            children=[
+                html.P(children="Versão " + VERSION, className="footer-text")
+            ]
+        ),
     ]
 )
 
@@ -152,7 +162,6 @@ categories_paths_5 = [
     "/apps/app5" + category.replace(" ", "_") for category in categories
 ]
 
-
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def display_page(pathname):
     if pathname == "/apps/app1":
@@ -173,6 +182,10 @@ def display_page(pathname):
     else:
         return index_page
 
+@app.callback(Output("store_selected_p", "children"), [Input("store-selected", "data")])
+def show_store_selected(store_selected):
+    if store_selected['store_selected'] != 'Nenhuma': return "Loja selecionada: " + store_selected['store_selected']
+    return ""
 
 if __name__ == "__main__":
     app.run_server(host="0.0.0.0", debug=False)

@@ -9,6 +9,7 @@ app.title = "Previsão de Vendas"
 auth = dash_auth.BasicAuth(app, password_dict)
 server = app.server
 
+VERSION = "1.0.0"
 
 def heroku():
     return False
