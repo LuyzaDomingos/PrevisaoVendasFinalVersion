@@ -6,7 +6,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 # Dependências do Dash
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from dash_extensions import Download
 from dash_extensions.snippets import send_data_frame, send_bytes
 from dash import no_update, callback_context
@@ -38,7 +38,6 @@ def read_data(path, fillna=False, end_date="2021-03-12"):
 
     return data
 
-
 # Leitura dos dados, amostragem diária
 data_d = read_data("previsao/geral2.csv", fillna=True)
 # Amostragem semanal
@@ -51,24 +50,41 @@ data_stock = read_data("previsao/estoque2.csv")
 data_loss = read_data("previsao/ruptura_geral.csv")
 # Dados de ruptura (mensal)
 data_loss_m = data_loss.resample("M").sum()
-# Ruptura versão 2 WIP
-# Para efeitos de teste, trabalharemos no momento com os dados da loja da lagoa
-# Vendas da Loja
-df_sales = read_data("data/sales/Lagoa_2.csv")
-# Estoque da Loja
-df_stock = read_data("data/stock/Lagoa_2.csv")
-# Estoque de segurança do CD
-security_dc = read_data("data/ES CBO.csv")
-# Estoque de segurança das lojas abastecidas pelo CD
-security_dc_stores = read_data("data/ES CBO Lojas.csv")
-# Estoque de segurança da Loja
-security_store = read_data("data/ES Lagoa.csv")
-# Ruptura de Loja
-data_loss_store = read_data("data/Loja#Lagoa.csv")
-# Ruptura de Compra
-data_loss_purchase = read_data("data/Compra#Lagoa.csv")
-# Ruptura de Estoque
-data_loss_stock = read_data("data/Estoque#Lagoa.csv")
+
+# Dicionário dos CDs e as lojas atendidas
+# Formato: <key>: [lista com as lojas atendidas pelo key]
+stores_cd = {'CBO': ['Campina Grande I', 'Campina Grande II', 'Solanea',
+  'Guarabira', 'Sape', 'Lagoa', 'Barao', 'Mangabeira', 'Mamanguape', 'Esperanca', 'Itabaiana',
+  'Sto. Elias', 'Alagoa Grande', 'Itambe', 'Soledade', 'Timbauba', 'Sta. Rita', 'Aristides Lobo', 'Queimadas', 'Alhandra', 'Campina Grande III', 'CABEDELO BR', 'Geisel', 'Monteiro', 'Bancarios', 'Campina Grande IV', 'Cabedelo', 'Lagoa Seca',
+  'Monteiro 2', 'Mangabeira Shopping', 'Goiana', 'Bayeux', 'Guarabira II', 'Picui', 'Goiana 2', 'Cuite', 'AREIA', 'Caruaru', 'Manaira'],
+
+ 'CJZ': ['Matriz', 'Sousa I', 'Pombal', 'Patos I', 'Patos II',
+  'Itaporanga', 'Patos IV', 'Ico', 'Iguatu', 'Jacobina', 'Irece I', 'Irece II', 'Joao Dourado', 'Patos III', 'Pianco', 'Sousa II']}
+
+# Séries temporais do gráfico de ruptura
+def get_store_data(store_name='Lagoa'):
+    # Vendas da Loja
+    df_sales = read_data("data/Vendas/"+store_name+"_2.csv")
+    # Estoque da Loja
+    df_stock = read_data("data/Estoque/"+store_name+"_2.csv")
+    # Estoque de segurança do CD e das lojas abastecidas pelo CD
+    if store_name in stores_cd['CBO']:
+        security_dc = read_data("data/ES/CBO.csv")
+        security_dc_stores = read_data("data/ES/CBO#Lojas.csv")
+    else:
+        security_dc = read_data("data/ES/CJZ.csv")
+        security_dc_stores = read_data("data/ES/CJZ#Lojas.csv")
+    # Estoque de segurança da Loja
+    security_store = read_data("data/ES/"+store_name+".csv")
+    # Ruptura de Loja
+    data_loss_store = read_data("data/Ruptura/Loja#"+store_name+".csv")
+    # Ruptura de Compra
+    data_loss_purchase = read_data("data/Ruptura/Compra#"+store_name+".csv")
+    # Ruptura de Estoque
+    data_loss_stock = read_data("data/Ruptura/Estoque#"+store_name+".csv")
+
+    return df_sales, df_stock, security_dc, security_dc_stores, security_store, data_loss_store, data_loss_purchase, data_loss_stock
+
 # Dicionário de categorias
 categories_dict = json.load(open("previsao/classificacao.json"))
 # Dicionário de frequências
@@ -94,6 +110,9 @@ layout = html.Div(
                 ),
                 html.P(
                     children="Visualização e previsão de séries temporais referentes à vendas e estoques de produtos",
+                    className="header-description",
+                ),
+                html.P(
                     className="header-description",
                 ),
                 html.Div(
@@ -218,30 +237,8 @@ layout = html.Div(
         ),
     ]
 )
-
-# Callback do botão de baixar previsão
-"""
-@app.callback(
-    Output("download", "data"),
-    [Input("bt-download", "n_clicks"), Input("product-filter", "value"), Input("frequency-selector", "value")]
-)
-def download_forecast(n_clicks, product, frequency):
-    if n_clicks is None:
-        return no_update
-        
-    path = "previsao/forecasts/" + frequency + "/" + product.replace(" ", "_").replace("/", "_") + ".csv"
-    try:
-        forecast = pd.read_csv(path)
-        forecast.index = pd.to_datetime(forecast['ds'])
-        return send_data_frame(forecast.to_csv, filename="Previsao_" + product.replace(" ", "_").replace("/", "_") + ".csv")
-    except:
-        return html.Div("Um erro ocorreu ao tentar obter a previsão!")
-"""
-
 # Callback de mostrar o botão atualmente selecionado
 buttons = ["bt-sales", "bt-stock"]
-
-
 @app.callback(
     [Output("bt-sales", "className"), Output("bt-stock", "className")],
     [Input("bt-sales", "n_clicks"), Input("bt-stock", "n_clicks")],
@@ -277,7 +274,6 @@ def update_products(category):
         for product in categories_dict[category]
     ], categories_dict[category][0]
 
-
 # Callback da seleção de produto, frequência, e data
 @app.callback(
     # Lembrete: Se tiver mais de uma chamada de Output(...) colocar em uma lista as multiplas chamadas
@@ -298,6 +294,7 @@ def update_products(category):
         Input("bt-stock", "n_clicks"),
         Input("bt-memory-pred", "data"),
     ],
+    [State("store-selected", "data")]
 )
 def update_charts(
     product,
@@ -307,6 +304,7 @@ def update_charts(
     bt_sales_nclicks,
     bt_stock_nclicks,
     memory,
+    store_selected,
 ):
     # Reorganizar os dados segundo a frequência selecionada
     if frequency == "D":
@@ -348,6 +346,9 @@ def update_charts(
             no_update,
         )
     elif button_id == "bt-stock":  # O botão selecionado é o de estoque
+        selected = store_selected['store_selected']
+        if selected == "Nenhuma": selected = "Lagoa"
+        df_sales, df_stock, security_dc, security_dc_stores, security_store, data_loss_store, data_loss_purchase, data_loss_stock = get_store_data(selected)
         # mask = (
         #    (data_d.index >= start_date)
         #    & (data_d.index <= end_date)
@@ -406,6 +407,9 @@ def update_charts(
                 no_update,
             )
         elif memory == "bt-stock":
+            selected = store_selected['store_selected']
+            if selected == "Nenhuma": selected = "Lagoa"
+            df_sales, df_stock, security_dc, security_dc_stores, security_store, data_loss_store, data_loss_purchase, data_loss_stock = get_store_data(selected)
             # mask = (
             #    (data_d.index >= start_date)
             #    & (data_d.index <= end_date)
@@ -466,8 +470,13 @@ def update_charts(
         Input("category-filter", "value"),
         Input("product-filter", "value"),
     ],
+    [State("store-selected", "data")]
 )
-def download_forecast(n_clicks, category, product):
+def download_forecast(n_clicks, category, product, store_selected):
+    selected = store_selected['store_selected']
+    if selected == "Nenhuma": selected = "Lagoa"
+    df_sales, df_stock, security_dc, security_dc_stores, security_store, data_loss_store, data_loss_purchase, data_loss_stock = get_store_data(selected)
+
     loss_table = create_loss_table(
         "CBO",
         "LAGOA",
