@@ -2,7 +2,7 @@
 Aplicação de Previsão de Vendas
 
 ## Motivação do Projeto
-O projeto de Previsão de Vendas busca auxiliar a equipe de estoque do Armazém Paraíba a tomar decisões sobre compra de produtos.
+O projeto de Previsão de Vendas busca auxiliar a equipe de estoque a tomar decisões sobre compra de produtos.
 
 ## Funcionalidades
 O projeto Previsão de Vendas é uma aplicação web, podendo ser acessado por meio de um navegador web (e.g. Mozilla Firefox, Google Chrome). A aplicação consiste em três funcionalidades principais: **Previsão por Produtos**, **Previsão por Categoria**, e **Painel de Vendas**. A página inicial (imagem abaixo) da aplicação permite que o usuário selecione uma das funcionalidades, redirecionando-o para a respectiva página.
