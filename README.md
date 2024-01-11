@@ -1,5 +1,5 @@
 # PrevisaoVendas
-Aplicação de Previsão de Vendas para o Armazém Paraíba: [Previsão de Vendas](https://armazem-develop.herokuapp.com/).
+Aplicação de Previsão de Vendas
 
 ## Motivação do Projeto
 O projeto de Previsão de Vendas busca auxiliar a equipe de estoque do Armazém Paraíba a tomar decisões sobre compra de produtos.
