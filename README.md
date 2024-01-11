@@ -58,18 +58,3 @@ Selecionando as opções de **Região** ou **Lojas**, é exibida uma lista com a
 
 O botão amarelo permite que seja apresentado o Painel de Vendas personalizado para a Região/Loja selecionada
 
-
-## Execução - Desenvolvimento
-
-Para executar o projeto em modo de desenvolvimento é necessário:
-- Ter instalado:  Python => 3.6, o pip e uma IDE(recomendamos o VS Code).
-- Ter o Django instalado - [link](https://docs.djangoproject.com/en/3.2/topics/install/).
-- Criar um ambiente virtual utilizando os seguintes comandos: $ python3 -m venv venv e $ source venv/bin/activate 
-- Instalar as blibliotecas que se encontram no arquivo requirements.txt utilizando o comando : $ pip install -r requirements.txt
-- Comando para executar o projeto: $ python3 index.py run
-
-## Deploy
-
- - Para realizar o deploy é necessário possuir o arquivo de chave privada do PuTTY.
- - Clonar o projeto no servidor e rodar o comando na pasta do repositório: $ nohup python3 index.py run &
- - Acessar o endereço: http://184.72.194.142:8050/
